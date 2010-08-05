@@ -3,7 +3,7 @@ package Games::Maze::SDL::Controller;
 # ABSTRACT: Controller.
 
 use Moose;
-use MooseX::NonMoose;
+use MooseX::NonMoose::InsideOut;
 use Games::Maze::SDL::Model;
 use Games::Maze::SDL::View;
 use SDL::Event;
@@ -23,16 +23,18 @@ has 'view' => (
     required => 1,
 );
 
-sub init {
+sub BUILD {
     my ($self) = @_;
 
     $self->add_event_handler( sub { $self->on_event(@_) } );
     $self->add_move_handler( sub  { $self->model->move_player(@_) } );
     $self->add_show_handler( sub  { $self->view->draw(@_) } );
+
+    return $self;
 }
 
 sub on_event {
-    my ($self, $e) = @_;
+    my ( $self, $e ) = @_;
 
     return 0 if $e->type == SDL_QUIT;
     return 0 if $e->key_sym == SDLK_ESCAPE;

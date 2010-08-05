@@ -4,6 +4,7 @@ package Games::Maze::SDL::View;
 
 use Moose;
 use Games::Maze::SDL::Model;
+use SDL::Rect;
 use SDLx::Surface;
 use SDLx::Sprite::Animated;
 
@@ -72,6 +73,26 @@ sub _build_cell_height {
     return $self->height / $self->model->height;
 }
 
+sub _build_player {
+    my ($self) = @_;
+
+    my $sprite = SDLx::Sprite::Animated->new(
+        image           => Games::Maze::SDL->sharedir->file('hero.png'),
+        rect            => SDL::Rect->new( 0, 0, 48, 48 ),
+        ticks_per_frame => 10,
+        sequences       => {
+            'up'    => [ [ 0, 0 ], [ 0, 1 ], [ 0, 2 ] ],
+            'down'  => [ [ 2, 0 ], [ 2, 1 ], [ 2, 2 ] ],
+            'left'  => [ [ 3, 0 ], [ 3, 1 ], [ 3, 2 ] ],
+            'right' => [ [ 1, 0 ], [ 1, 1 ], [ 1, 2 ] ],
+        },
+    );
+
+    $sprite->sequence( $self->model->player_direction );
+
+    return $sprite;
+}
+
 sub translate_x {
     my ( $self, $x ) = @_;
     return $self->cell_width * $x + $self->cell_width / 2;
@@ -85,19 +106,21 @@ sub translate_y {
 sub player_x {
     my ($self) = @_;
     return $self->translate_x( $self->model->player_x )
-        - $self->player->width / 2;
+        - $self->player->clip->w / 2;
 }
 
 sub player_y {
     my ($self) = @_;
     return $self->translate_y( $self->model->player_y )
-        - $self->player->height / 2;
+        - $self->player->clip->h / 2;
 }
 
 sub draw {
     my ($self) = @_;
 
-    $self->player->draw_xy( $self->display, $self->player_x, $self->player_y );
+    $self->player->draw_xy( $self->display, $self->player_x,
+        $self->player_y );
+
     $self->display->update();
 }
 
