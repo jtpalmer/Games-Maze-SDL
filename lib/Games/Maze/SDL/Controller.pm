@@ -6,6 +6,8 @@ use Moose;
 use MooseX::NonMoose;
 use Games::Maze::SDL::Model;
 use Games::Maze::SDL::View;
+use SDL::Event;
+use SDL::Events ':all';
 
 extends 'SDLx::Controller';
 
