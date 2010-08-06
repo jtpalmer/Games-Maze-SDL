@@ -76,7 +76,7 @@ has 'player_y' => (
 has 'player_direction' => (
     is      => 'ro',
     isa     => 'Games::Maze::SDL::Direction',
-    default => 'down',
+    default => 'south',
 );
 
 sub _build_maze {
