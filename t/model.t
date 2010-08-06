@@ -27,7 +27,7 @@ cmp_ok( $model->exit_y, '<=', $height, 'exit_y <= height' );
 is( $model->player_x, $model->entry_x, 'player_x is entry_x' );
 is( $model->player_y, $model->entry_y, 'player_y is entry_y' );
 
-is( $model->player_direction, 'down', 'player_direction is "down"' );
+is( $model->player_direction, 'stop', 'player_direction is "stop"' );
 
 my $cells = $model->cells;
 is( scalar @$cells, $model->height, 'cells has correct number of rows' );

@@ -74,9 +74,15 @@ has 'player_y' => (
 );
 
 has 'player_direction' => (
-    is      => 'ro',
+    is      => 'rw',
     isa     => 'Games::Maze::SDL::Direction',
-    default => 'south',
+    default => 'stop',
+);
+
+has 'player_velocity' => (
+    is      => 'rw',
+    isa     => 'Num',
+    default => 0,
 );
 
 sub _build_maze {
@@ -143,10 +149,36 @@ sub paths {
     };
 }
 
+around 'player_direction' => sub {
+    my ( $orig, $self, $direction ) = @_;
+
+    if ($direction) {
+        $self->player_velocity(0.001);
+        return $self->$orig($direction);
+    }
+
+    return $self->$orig;
+};
+
 sub move_player {
     my ( $self, $dt ) = @_;
 
-    # TODO
+    $self->player_y( $self->player_y + $self->player_velocity * $dt )
+        if $self->player_direction eq 'south';
+
+    $self->player_y( $self->player_y - $self->player_velocity * $dt )
+        if $self->player_direction eq 'north';
+
+    $self->player_x( $self->player_x + $self->player_velocity * $dt )
+        if $self->player_direction eq 'east';
+
+    $self->player_x( $self->player_x - $self->player_velocity * $dt )
+        if $self->player_direction eq 'west';
+}
+
+sub stop_player {
+    my ($self) = @_;
+    $self->player_velocity(0);
 }
 
 no Moose;

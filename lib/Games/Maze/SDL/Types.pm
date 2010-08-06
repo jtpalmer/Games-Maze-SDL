@@ -4,6 +4,6 @@ package Games::Maze::SDL::Types;
 
 use Moose::Util::TypeConstraints;
 
-enum 'Games::Maze::SDL::Direction' => qw(north south west east);
+enum 'Games::Maze::SDL::Direction' => qw(north south west east stop);
 
 no Moose::Util::TypeConstraints;

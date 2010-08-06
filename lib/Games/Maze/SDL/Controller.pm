@@ -39,6 +39,27 @@ sub on_event {
     return 0 if $e->type == SDL_QUIT;
     return 0 if $e->key_sym == SDLK_ESCAPE;
 
+    if ( $e->type == SDL_KEYDOWN ) {
+        $self->model->player_direction('west')  if $e->key_sym == SDLK_LEFT;
+        $self->model->player_direction('east')  if $e->key_sym == SDLK_RIGHT;
+        $self->model->player_direction('south') if $e->key_sym == SDLK_DOWN;
+        $self->model->player_direction('north') if $e->key_sym == SDLK_UP;
+    }
+    elsif ( $e->type == SDL_KEYUP ) {
+        $self->model->stop_player
+            if $e->key_sym == SDLK_LEFT
+                && $self->model->player_direction eq 'west';
+        $self->model->stop_player
+            if $e->key_sym == SDLK_RIGHT
+                && $self->model->player_direction eq 'east';
+        $self->model->stop_player
+            if $e->key_sym == SDLK_DOWN
+                && $self->model->player_direction eq 'south';
+        $self->model->stop_player
+            if $e->key_sym == SDLK_UP
+                && $self->model->player_direction eq 'north';
+    }
+
     return 1;
 }
 

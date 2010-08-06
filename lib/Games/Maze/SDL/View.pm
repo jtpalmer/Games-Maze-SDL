@@ -54,6 +54,14 @@ has 'player' => (
     init_arg   => undef,
 );
 
+sub BUILD {
+    my ($self) = @_;
+
+    $self->display;
+
+    return $self;
+}
+
 sub _build_display {
     my ($self) = @_;
 
@@ -85,10 +93,13 @@ sub _build_player {
             'south' => [ [ 2, 1 ], [ 2, 2 ], [ 2, 0 ] ],
             'west'  => [ [ 3, 0 ], [ 3, 1 ], [ 3, 2 ] ],
             'east'  => [ [ 1, 0 ], [ 1, 1 ], [ 1, 2 ] ],
+            'stop'  => [ [ 4, 0 ] ],
         },
     );
 
     $sprite->sequence( $self->model->player_direction );
+
+    $sprite->start;
 
     return $sprite;
 }
@@ -123,6 +134,12 @@ sub player_y {
     my ($self) = @_;
     return $self->translate_y( $self->model->player_y )
         - $self->player->clip->h / 2;
+}
+
+sub clear {
+    my ($self) = @_;
+    $self->display->draw_rect( [ 0, 0, $self->width - 1, $self->height - 1 ],
+        [ 0, 0, 0, 255 ] );
 }
 
 sub draw_maze {
@@ -167,15 +184,29 @@ sub draw_maze {
     );
 }
 
-sub draw {
+sub draw_player {
     my ($self) = @_;
 
-    $self->draw_maze;
+    $self->player->sequence( $self->model->player_direction )
+        if $self->player->sequence ne $self->model->player_direction;
+
+    $self->player->sequence('stop') if $self->model->player_velocity == 0;
 
     $self->player->draw_xy( $self->display, $self->player_x,
         $self->player_y );
+}
+
+sub draw {
+    my ( $self, $ticks ) = @_;
+
+    $self->clear;
+
+    $self->draw_maze;
+    $self->draw_player;
 
     $self->display->update();
+
+    return $self;
 }
 
 no Moose;
