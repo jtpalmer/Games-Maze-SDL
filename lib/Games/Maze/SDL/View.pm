@@ -93,6 +93,16 @@ sub _build_player {
     return $sprite;
 }
 
+sub scale_x {
+    my ( $self, $x ) = @_;
+    return $self->cell_width * $x;
+}
+
+sub scale_y {
+    my ( $self, $y ) = @_;
+    return $self->cell_height * $y;
+}
+
 sub translate_x {
     my ( $self, $x ) = @_;
     return $self->cell_width * ( $x - 1 ) + $self->cell_width / 2;
@@ -120,6 +130,13 @@ sub draw_maze {
 
     my $color = [ 255, 255, 255, 255 ];
 
+    $self->display->draw_line( [ 0, 0 ], [ $self->width - 1, 0 ], $color );
+    $self->display->draw_line( [ 0, 0 ], [ 0, $self->height - 1 ], $color );
+    $self->display->draw_line( [ $self->width - 1, 0 ],
+        [ $self->width - 1, $self->height - 1 ], $color );
+    $self->display->draw_line( [ 0, $self->height - 1 ],
+        [ $self->width - 1, $self->height - 1 ], $color );
+
     for my $y ( 1 .. $self->model->height ) {
 
         my $y1 = $self->translate_y( $y - 0.5 );
@@ -139,6 +156,15 @@ sub draw_maze {
                 if !$paths->{south};
         }
     }
+
+    $self->display->draw_rect(
+        [   $self->translate_x( $self->model->exit_x - 0.1 ),
+            $self->translate_y( $self->model->exit_y - 0.1 ),
+            $self->scale_x(0.2),
+            $self->scale_y(0.2),
+        ],
+        [ 0, 255, 0, 255 ]
+    );
 }
 
 sub draw {
