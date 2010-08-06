@@ -13,14 +13,14 @@ sub run {
     my ( $self, %options ) = @_;
 
     my $model = Games::Maze::SDL::Model->new(
-        width  => 30,
-        height => 20,
+        width  => 20,
+        height => 16,
     );
 
     my $view = Games::Maze::SDL::View->new(
         model  => $model,
-        width  => 600,
-        height => 400,
+        width  => 1000,
+        height => 800,
     );
 
     my $controller = Games::Maze::SDL::Controller->new(
@@ -32,6 +32,8 @@ sub run {
 }
 
 sub sharedir {
+
+    # TODO
     my $root = Path::Class::Dir->new( $FindBin::Bin, '..' );
     return $root->subdir('share');
 }

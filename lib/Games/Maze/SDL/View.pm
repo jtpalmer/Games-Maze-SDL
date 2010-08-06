@@ -95,12 +95,12 @@ sub _build_player {
 
 sub translate_x {
     my ( $self, $x ) = @_;
-    return $self->cell_width * $x + $self->cell_width / 2;
+    return $self->cell_width * ( $x - 1 ) + $self->cell_width / 2;
 }
 
 sub translate_y {
     my ( $self, $y ) = @_;
-    return $self->cell_height * $y + $self->cell_height / 2;
+    return $self->cell_height * ( $y - 1 ) + $self->cell_height / 2;
 }
 
 sub player_x {
@@ -115,8 +115,36 @@ sub player_y {
         - $self->player->clip->h / 2;
 }
 
+sub draw_maze {
+    my ($self) = @_;
+
+    my $color = [ 255, 255, 255, 255 ];
+
+    for my $y ( 1 .. $self->model->height ) {
+
+        my $y1 = $self->translate_y( $y - 0.5 );
+        my $y2 = $self->translate_y( $y + 0.5 );
+
+        for my $x ( 1 .. $self->model->width ) {
+
+            my $x1 = $self->translate_x( $x - 0.5 );
+            my $x2 = $self->translate_x( $x + 0.5 );
+
+            my $paths = $self->model->paths( $x, $y );
+
+            $self->display->draw_line( [ $x2, $y1 ], [ $x2, $y2 ], $color )
+                if !$paths->{east};
+
+            $self->display->draw_line( [ $x1, $y2 ], [ $x2, $y2 ], $color )
+                if !$paths->{south};
+        }
+    }
+}
+
 sub draw {
     my ($self) = @_;
+
+    $self->draw_maze;
 
     $self->player->draw_xy( $self->display, $self->player_x,
         $self->player_y );

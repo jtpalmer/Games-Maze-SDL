@@ -81,15 +81,17 @@ has 'player_direction' => (
 
 sub _build_maze {
     my ($self) = @_;
-    return Games::Maze->new(
+    my $maze = Games::Maze->new(
         dimensions => [ $self->width, $self->height, 1 ] );
+    $maze->make();
+    return $maze;
 }
 
 sub _build_cells {
     my ($self) = @_;
     my @rows = ( split /\n/, $self->maze->to_hex_dump )[ 1 .. $self->height ];
     my @cells = map {
-        [ ( map {hex} split /\W/ )[ 1 .. $self->width ] ]
+        [ ( map {hex} split /\W/ )[ 2 .. $self->width + 1 ] ]
     } @rows;
     return \@cells;
 }
@@ -128,6 +130,17 @@ sub _build_player_x {
 sub _build_player_y {
     my ($self) = @_;
     return $self->entry_y;
+}
+
+sub paths {
+    my ( $self, $x, $y ) = @_;
+    my $cell = $self->cells->[ $y - 1 ][ $x - 1 ];
+    return {
+        north => $cell & $Games::Maze::North,
+        south => $cell & $Games::Maze::South,
+        east  => $cell & $Games::Maze::East,
+        west  => $cell & $Games::Maze::West,
+    };
 }
 
 sub move_player {
