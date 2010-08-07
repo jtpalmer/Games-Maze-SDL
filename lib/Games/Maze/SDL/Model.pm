@@ -79,7 +79,7 @@ has 'player_y' => (
 has 'player_direction' => (
     is      => 'rw',
     isa     => 'Games::Maze::SDL::Direction',
-    default => 'stop',
+    default => 'south',
 );
 
 has 'player_velocity' => (

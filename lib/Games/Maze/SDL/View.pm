@@ -104,8 +104,6 @@ sub _build_player {
 
     $sprite->sequence( $self->model->player_direction );
 
-    $sprite->start;
-
     return $sprite;
 }
 
@@ -190,8 +188,6 @@ sub draw_maze {
 sub draw_player {
     my ($self) = @_;
 
-    $self->player->sequence('stop') if $self->model->player_velocity == 0;
-
     $self->player->draw( $self->display );
 }
 
@@ -219,8 +215,10 @@ sub handle_event {
     }
     elsif ( $event->{type} eq 'player_turned' ) {
         $self->player->sequence( $self->model->player_direction );
+        $self->player->start;
     }
     elsif ( $event->{type} eq 'player_stopped' ) {
+        $self->player->reset;
     }
 }
 
