@@ -190,9 +190,6 @@ sub draw_maze {
 sub draw_player {
     my ($self) = @_;
 
-    $self->player->sequence( $self->model->player_direction )
-        if $self->player->sequence ne $self->model->player_direction;
-
     $self->player->sequence('stop') if $self->model->player_velocity == 0;
 
     $self->player->draw( $self->display );
@@ -221,6 +218,7 @@ sub handle_event {
             $self->translate_player_y( $self->model->player_y ) );
     }
     elsif ( $event->{type} eq 'player_turned' ) {
+        $self->player->sequence( $self->model->player_direction );
     }
     elsif ( $event->{type} eq 'player_stopped' ) {
     }

@@ -165,6 +165,7 @@ after 'player_direction' => sub {
 
     if (@_) {
         $self->player_velocity(0.002);
+        $self->notify_observers( { type => 'player_turned' } );
     }
 };
 
