@@ -46,18 +46,16 @@ sub on_event {
         $self->model->player_direction('north') if $e->key_sym == SDLK_UP;
     }
     elsif ( $e->type == SDL_KEYUP ) {
+        my $d = $self->model->player_direction;
+
         $self->model->stop_player
-            if $e->key_sym == SDLK_LEFT
-                && $self->model->player_direction eq 'west';
+            if $e->key_sym == SDLK_LEFT && $d eq 'west';
         $self->model->stop_player
-            if $e->key_sym == SDLK_RIGHT
-                && $self->model->player_direction eq 'east';
+            if $e->key_sym == SDLK_RIGHT && $d eq 'east';
         $self->model->stop_player
-            if $e->key_sym == SDLK_DOWN
-                && $self->model->player_direction eq 'south';
+            if $e->key_sym == SDLK_DOWN && $d eq 'south';
         $self->model->stop_player
-            if $e->key_sym == SDLK_UP
-                && $self->model->player_direction eq 'north';
+            if $e->key_sym == SDLK_UP && $d eq 'north';
     }
 
     return 1;

@@ -57,6 +57,10 @@ has 'player' => (
 sub BUILD {
     my ($self) = @_;
 
+    $self->model->add_observer( sub { $self->handle_event(@_) } );
+    $self->player->x( $self->translate_player_x( $self->model->player_x ) );
+    $self->player->y( $self->translate_player_y( $self->model->player_y ) );
+
     $self->display;
 
     return $self;
@@ -87,7 +91,8 @@ sub _build_player {
     my $sprite = SDLx::Sprite::Animated->new(
         image           => Games::Maze::SDL->sharedir->file('hero.png'),
         rect            => SDL::Rect->new( 0, 0, 48, 48 ),
-        ticks_per_frame => 10,
+        ticks_per_frame => 5,
+        type            => 'reverse',
         sequences       => {
             'north' => [ [ 0, 1 ], [ 0, 2 ], [ 0, 0 ] ],
             'south' => [ [ 2, 1 ], [ 2, 2 ], [ 2, 0 ] ],
@@ -124,16 +129,14 @@ sub translate_y {
     return $self->cell_height * ( $y - 1 ) + $self->cell_height / 2;
 }
 
-sub player_x {
-    my ($self) = @_;
-    return $self->translate_x( $self->model->player_x )
-        - $self->player->clip->w / 2;
+sub translate_player_x {
+    my ( $self, $x ) = @_;
+    return $self->translate_x($x) - $self->player->clip->w / 2;
 }
 
-sub player_y {
-    my ($self) = @_;
-    return $self->translate_y( $self->model->player_y )
-        - $self->player->clip->h / 2;
+sub translate_player_y {
+    my ( $self, $y ) = @_;
+    return $self->translate_y($y) - $self->player->clip->h / 2;
 }
 
 sub clear {
@@ -192,8 +195,7 @@ sub draw_player {
 
     $self->player->sequence('stop') if $self->model->player_velocity == 0;
 
-    $self->player->draw_xy( $self->display, $self->player_x,
-        $self->player_y );
+    $self->player->draw( $self->display );
 }
 
 sub draw {
@@ -207,6 +209,21 @@ sub draw {
     $self->display->update();
 
     return $self;
+}
+
+sub handle_event {
+    my ( $self, $event ) = @_;
+
+    if ( $event->{type} eq 'player_moved' ) {
+        $self->player->x(
+            $self->translate_player_x( $self->model->player_x ) );
+        $self->player->y(
+            $self->translate_player_y( $self->model->player_y ) );
+    }
+    elsif ( $event->{type} eq 'player_turned' ) {
+    }
+    elsif ( $event->{type} eq 'player_stopped' ) {
+    }
 }
 
 no Moose;

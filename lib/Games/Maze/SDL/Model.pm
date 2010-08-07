@@ -5,6 +5,9 @@ package Games::Maze::SDL::Model;
 use Moose;
 use Games::Maze;
 use Games::Maze::SDL::Types;
+use Games::Maze::SDL::Observable;
+
+with 'Games::Maze::SDL::Observable';
 
 has 'width' => (
     is       => 'ro',
@@ -149,36 +152,42 @@ sub paths {
     };
 }
 
-around 'player_direction' => sub {
-    my ( $orig, $self, $direction ) = @_;
+after qw(player_x player_y player_direction player_velocity) => sub {
+    my $self = shift;
 
-    if ($direction) {
-        $self->player_velocity(0.001);
-        return $self->$orig($direction);
+    if (@_) {
+        $self->changed(1);
     }
+};
 
-    return $self->$orig;
+after 'player_direction' => sub {
+    my $self = shift;
+
+    if (@_) {
+        $self->player_velocity(0.002);
+    }
 };
 
 sub move_player {
     my ( $self, $dt ) = @_;
 
-    $self->player_y( $self->player_y + $self->player_velocity * $dt )
-        if $self->player_direction eq 'south';
+    my ( $x, $y ) = ( $self->player_x,        $self->player_y );
+    my ( $v, $d ) = ( $self->player_velocity, $self->player_direction );
 
-    $self->player_y( $self->player_y - $self->player_velocity * $dt )
-        if $self->player_direction eq 'north';
+    return if $v == 0;
 
-    $self->player_x( $self->player_x + $self->player_velocity * $dt )
-        if $self->player_direction eq 'east';
+    $self->player_y( $y + $v * $dt ) if $d eq 'south';
+    $self->player_y( $y - $v * $dt ) if $d eq 'north';
+    $self->player_x( $x + $v * $dt ) if $d eq 'east';
+    $self->player_x( $x - $v * $dt ) if $d eq 'west';
 
-    $self->player_x( $self->player_x - $self->player_velocity * $dt )
-        if $self->player_direction eq 'west';
+    $self->notify_observers( { type => 'player_moved' } );
 }
 
 sub stop_player {
     my ($self) = @_;
     $self->player_velocity(0);
+    $self->notify_observers( { type => 'player_stopped' } );
 }
 
 no Moose;
