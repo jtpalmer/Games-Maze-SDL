@@ -6,6 +6,7 @@ use Moose;
 use Games::Maze;
 use Games::Maze::SDL::Types;
 use Games::Maze::SDL::Observable;
+use POSIX 'floor';
 
 with 'Games::Maze::SDL::Observable';
 
@@ -177,10 +178,30 @@ sub move_player {
 
     return if $v == 0;
 
-    $self->player_y( $y + $v * $dt ) if $d eq 'south';
-    $self->player_y( $y - $v * $dt ) if $d eq 'north';
-    $self->player_x( $x + $v * $dt ) if $d eq 'east';
-    $self->player_x( $x - $v * $dt ) if $d eq 'west';
+    my $cell_x = floor( $self->player_x + 0.5);
+    my $cell_y = floor( $self->player_y + 0.5);
+    my $paths = $self->paths( $cell_x, $cell_y );
+
+    if ($d eq 'south') {
+        my $new_y = $y + $v * $dt;
+        $new_y = $cell_y if $new_y > $cell_y && !$paths->{$d};
+        $self->player_y( $new_y )
+    }
+    elsif ($d eq 'north') {
+        my $new_y = $y - $v * $dt;
+        $new_y = $cell_y if $new_y < $cell_y && !$paths->{$d};
+        $self->player_y( $new_y )
+    }
+    elsif ($d eq 'east') {
+        my $new_x = $x + $v * $dt;
+        $new_x = $cell_x if $new_x > $cell_x && !$paths->{$d};
+        $self->player_x( $new_x )
+    }
+    elsif ($d eq 'west') {
+        my $new_x = $x - $v * $dt;
+        $new_x = $cell_x if $new_x < $cell_x && !$paths->{$d};
+        $self->player_x( $new_x )
+    }
 
     $self->notify_observers( { type => 'player_moved' } );
 }
