@@ -185,19 +185,13 @@ sub draw_maze {
     );
 }
 
-sub draw_player {
-    my ($self) = @_;
-
-    $self->player->draw( $self->display );
-}
-
 sub draw {
     my ( $self, $ticks ) = @_;
 
     $self->clear;
 
     $self->draw_maze;
-    $self->draw_player;
+    $self->player->draw( $self->display );
 
     $self->display->update();
 
