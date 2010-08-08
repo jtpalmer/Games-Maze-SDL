@@ -40,6 +40,21 @@ has 'cell_height' => (
     init_arg   => undef,
 );
 
+has 'background_color' => (
+    is      => 'ro',
+    default => sub { [ 0, 0, 0, 255 ] },
+);
+
+has 'wall_color' => (
+    is      => 'ro',
+    default => sub { [ 255, 255, 255, 255 ] },
+);
+
+has 'exit_color' => (
+    is      => 'ro',
+    default => sub { [ 0, 255, 0, 255 ] },
+);
+
 has 'display' => (
     is         => 'ro',
     isa        => 'SDLx::Surface',
@@ -54,6 +69,13 @@ has 'player' => (
     init_arg   => undef,
 );
 
+has 'player_old_rect' => (
+    is         => 'rw',
+    isa        => 'SDL::Rect',
+    lazy_build => 1,
+    init_arg   => undef,
+);
+
 sub BUILD {
     my ($self) = @_;
 
@@ -61,7 +83,8 @@ sub BUILD {
     $self->player->x( $self->translate_player_x( $self->model->player_x ) );
     $self->player->y( $self->translate_player_y( $self->model->player_y ) );
 
-    $self->display;
+    $self->clear;
+    $self->draw_maze;
 
     return $self;
 }
@@ -107,6 +130,12 @@ sub _build_player {
     return $sprite;
 }
 
+sub _build_player_old_rect {
+    my ($self) = @_;
+    my $rect = $self->player->rect;
+    return SDL::Rect->new( $rect->x, $rect->y, $rect->w, $rect->h );
+}
+
 sub scale_x {
     my ( $self, $x ) = @_;
     return $self->cell_width * $x;
@@ -140,27 +169,20 @@ sub translate_player_y {
 sub clear {
     my ($self) = @_;
     $self->display->draw_rect( [ 0, 0, $self->width - 1, $self->height - 1 ],
-        [ 0, 0, 0, 255 ] );
+        $self->background_color );
 }
 
-sub draw_maze {
-    my ($self) = @_;
+sub draw_cells {
+    my ( $self, $x_range, $y_range ) = @_;
 
-    my $color = [ 255, 255, 255, 255 ];
+    my $color = $self->wall_color;
 
-    $self->display->draw_line( [ 0, 0 ], [ $self->width - 1, 0 ], $color );
-    $self->display->draw_line( [ 0, 0 ], [ 0, $self->height - 1 ], $color );
-    $self->display->draw_line( [ $self->width - 1, 0 ],
-        [ $self->width - 1, $self->height - 1 ], $color );
-    $self->display->draw_line( [ 0, $self->height - 1 ],
-        [ $self->width - 1, $self->height - 1 ], $color );
-
-    for my $y ( 1 .. $self->model->height ) {
+    for my $y ( $y_range->[0] .. $y_range->[1] ) {
 
         my $y1 = $self->translate_y( $y - 0.5 );
         my $y2 = $self->translate_y( $y + 0.5 );
 
-        for my $x ( 1 .. $self->model->width ) {
+        for my $x ( $x_range->[0] .. $x_range->[1] ) {
 
             my $x1 = $self->translate_x( $x - 0.5 );
             my $x2 = $self->translate_x( $x + 0.5 );
@@ -174,6 +196,22 @@ sub draw_maze {
                 if !$paths->{south};
         }
     }
+}
+
+sub draw_maze {
+    my ($self) = @_;
+
+    my $color = $self->wall_color;
+
+    $self->display->draw_line( [ 0, 0 ], [ $self->width - 1, 0 ], $color );
+    $self->display->draw_line( [ 0, 0 ], [ 0, $self->height - 1 ], $color );
+    $self->display->draw_line( [ $self->width - 1, 0 ],
+        [ $self->width - 1, $self->height - 1 ], $color );
+    $self->display->draw_line( [ 0, $self->height - 1 ],
+        [ $self->width - 1, $self->height - 1 ], $color );
+
+    $self->draw_cells( [ 1, $self->model->width ],
+        [ 1, $self->model->height ] );
 
     $self->display->draw_rect(
         [   $self->translate_x( $self->model->exit_x - 0.1 ),
@@ -181,18 +219,27 @@ sub draw_maze {
             $self->scale_x(0.2),
             $self->scale_y(0.2),
         ],
-        [ 0, 255, 0, 255 ]
+        $self->exit_color
     );
+}
+
+sub draw_player {
+    my ($self) = @_;
+
+    $self->display->draw_rect( $self->player_old_rect,
+        $self->background_color );
+    $self->player->draw( $self->display );
+
+    my $rect     = $self->player->rect;
+    my $old_rect = $self->player_old_rect;
+    $old_rect->x( $rect->x );
+    $old_rect->y( $rect->y );
 }
 
 sub draw {
     my ( $self, $ticks ) = @_;
 
-    $self->clear;
-
-    $self->draw_maze;
-    $self->player->draw( $self->display );
-
+    $self->draw_player;
     $self->display->update();
 
     return $self;
