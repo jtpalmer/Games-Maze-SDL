@@ -182,24 +182,46 @@ sub move_player {
     my $cell_y = floor( $self->player_y + 0.5 );
     my $paths  = $self->paths( $cell_x, $cell_y );
 
+    my ($dx, $dy) = (0.02, 0.02);
+
     if ( $d eq 'south' ) {
         my $new_y = $y + $v * $dt;
-        $new_y = $cell_y if $new_y > $cell_y && !$paths->{$d};
+        if ($paths->{$d}) {
+            $new_y = $cell_y if $x > $cell_x + $dx;
+            $new_y = $cell_y if $x < $cell_x - $dx;
+        } else {
+            $new_y = $cell_y if $new_y > $cell_y;
+        }
         $self->player_y($new_y);
     }
     elsif ( $d eq 'north' ) {
         my $new_y = $y - $v * $dt;
-        $new_y = $cell_y if $new_y < $cell_y && !$paths->{$d};
+        if ($paths->{$d}) {
+            $new_y = $cell_y if $x > $cell_x + $dx;
+            $new_y = $cell_y if $x < $cell_x - $dx;
+        } else {
+            $new_y = $cell_y if $new_y < $cell_y;
+        }
         $self->player_y($new_y);
     }
     elsif ( $d eq 'east' ) {
         my $new_x = $x + $v * $dt;
-        $new_x = $cell_x if $new_x > $cell_x && !$paths->{$d};
+        if ($paths->{$d}) {
+            $new_x = $cell_x if $y > $cell_y + $dy;
+            $new_x = $cell_x if $y < $cell_y - $dy;
+        } else {
+            $new_x = $cell_x if $new_x > $cell_x;
+        }
         $self->player_x($new_x);
     }
     elsif ( $d eq 'west' ) {
         my $new_x = $x - $v * $dt;
-        $new_x = $cell_x if $new_x < $cell_x && !$paths->{$d};
+        if ($paths->{$d}) {
+            $new_x = $cell_x if $y > $cell_y + $dy;
+            $new_x = $cell_x if $y < $cell_y - $dy;
+        } else {
+            $new_x = $cell_x if $new_x < $cell_x;
+        }
         $self->player_x($new_x);
     }
 
