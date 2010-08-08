@@ -24,6 +24,7 @@ sub run {
     );
 
     my $controller = Games::Maze::SDL::Controller->new(
+        dt    => 25,
         model => $model,
         view  => $view,
     );
