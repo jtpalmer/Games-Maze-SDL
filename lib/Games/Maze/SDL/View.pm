@@ -115,7 +115,7 @@ sub _build_player {
     my $sprite = SDLx::Sprite::Animated->new(
         image           => Games::Maze::SDL->sharedir->file('hero.png'),
         rect            => SDL::Rect->new( 0, 0, 48, 48 ),
-        ticks_per_frame => 5,
+        ticks_per_frame => 10,
         type            => 'reverse',
         sequences       => {
             'north' => [ [ 0, 1 ], [ 0, 2 ], [ 0, 0 ] ],
@@ -181,9 +181,9 @@ sub draw_cells {
     $y_range->[0] = 1 if $y_range->[0] < 1;
     $x_range->[0] = 1 if $x_range->[0] < 1;
     $y_range->[1] = $self->model->height
-        if $y_range->[0] > $self->model->height;
+        if $y_range->[1] > $self->model->height;
     $x_range->[1] = $self->model->width
-        if $x_range->[0] > $self->model->width;
+        if $x_range->[1] > $self->model->width;
 
     for my $y ( $y_range->[0] .. $y_range->[1] ) {
 
