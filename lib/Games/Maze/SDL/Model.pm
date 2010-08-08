@@ -89,6 +89,15 @@ has 'player_velocity' => (
     default => 0,
 );
 
+sub BUILD {
+    my ($self) = @_;
+
+    $self->cells->[ $self->entry_y - 1 ][ $self->entry_x - 1 ]
+        &= ~$Games::Maze::North;
+    $self->cells->[ $self->exit_y - 1 ][ $self->exit_x - 1 ]
+        &= ~$Games::Maze::South;
+}
+
 sub _build_maze {
     my ($self) = @_;
     my $maze = Games::Maze->new(
@@ -182,44 +191,48 @@ sub move_player {
     my $cell_y = floor( $self->player_y + 0.5 );
     my $paths  = $self->paths( $cell_x, $cell_y );
 
-    my ($dx, $dy) = (0.02, 0.02);
+    my ( $dx, $dy ) = ( 0.02, 0.02 );
 
     if ( $d eq 'south' ) {
         my $new_y = $y + $v * $dt;
-        if ($paths->{$d}) {
+        if ( $paths->{$d} ) {
             $new_y = $cell_y if $x > $cell_x + $dx;
             $new_y = $cell_y if $x < $cell_x - $dx;
-        } else {
+        }
+        else {
             $new_y = $cell_y if $new_y > $cell_y;
         }
         $self->player_y($new_y);
     }
     elsif ( $d eq 'north' ) {
         my $new_y = $y - $v * $dt;
-        if ($paths->{$d}) {
+        if ( $paths->{$d} ) {
             $new_y = $cell_y if $x > $cell_x + $dx;
             $new_y = $cell_y if $x < $cell_x - $dx;
-        } else {
+        }
+        else {
             $new_y = $cell_y if $new_y < $cell_y;
         }
         $self->player_y($new_y);
     }
     elsif ( $d eq 'east' ) {
         my $new_x = $x + $v * $dt;
-        if ($paths->{$d}) {
+        if ( $paths->{$d} ) {
             $new_x = $cell_x if $y > $cell_y + $dy;
             $new_x = $cell_x if $y < $cell_y - $dy;
-        } else {
+        }
+        else {
             $new_x = $cell_x if $new_x > $cell_x;
         }
         $self->player_x($new_x);
     }
     elsif ( $d eq 'west' ) {
         my $new_x = $x - $v * $dt;
-        if ($paths->{$d}) {
+        if ( $paths->{$d} ) {
             $new_x = $cell_x if $y > $cell_y + $dy;
             $new_x = $cell_x if $y < $cell_y - $dy;
-        } else {
+        }
+        else {
             $new_x = $cell_x if $new_x < $cell_x;
         }
         $self->player_x($new_x);
