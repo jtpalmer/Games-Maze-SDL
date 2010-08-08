@@ -7,6 +7,7 @@ use Games::Maze::SDL::Model;
 use SDL::Rect;
 use SDLx::Surface;
 use SDLx::Sprite::Animated;
+use POSIX 'floor';
 
 has 'model' => (
     is       => 'ro',
@@ -177,6 +178,13 @@ sub draw_cells {
 
     my $color = $self->wall_color;
 
+    $y_range->[0] = 1 if $y_range->[0] < 1;
+    $x_range->[0] = 1 if $x_range->[0] < 1;
+    $y_range->[1] = $self->model->height
+        if $y_range->[0] > $self->model->height;
+    $x_range->[1] = $self->model->width
+        if $x_range->[0] > $self->model->width;
+
     for my $y ( $y_range->[0] .. $y_range->[1] ) {
 
         my $y1 = $self->translate_y( $y - 0.5 );
@@ -228,6 +236,11 @@ sub draw_player {
 
     $self->display->draw_rect( $self->player_old_rect,
         $self->background_color );
+
+    my $x = floor( $self->model->player_x + 0.5 );
+    my $y = floor( $self->model->player_y + 0.5 );
+    $self->draw_cells( [ $x - 1, $x + 1 ], [ $y - 1, $y + 1 ] );
+
     $self->player->draw( $self->display );
 
     my $rect     = $self->player->rect;
