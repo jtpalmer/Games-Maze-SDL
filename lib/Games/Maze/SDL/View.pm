@@ -211,13 +211,6 @@ sub draw_maze {
 
     my $color = $self->wall_color;
 
-    $self->display->draw_line( [ 0, 0 ], [ $self->width - 1, 0 ], $color );
-    $self->display->draw_line( [ 0, 0 ], [ 0, $self->height - 1 ], $color );
-    $self->display->draw_line( [ $self->width - 1, 0 ],
-        [ $self->width - 1, $self->height - 1 ], $color );
-    $self->display->draw_line( [ 0, $self->height - 1 ],
-        [ $self->width - 1, $self->height - 1 ], $color );
-
     $self->draw_cells( [ 1, $self->model->width ],
         [ 1, $self->model->height ] );
 
