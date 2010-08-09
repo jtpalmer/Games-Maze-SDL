@@ -114,7 +114,7 @@ sub _build_player {
 
     my $sprite = SDLx::Sprite::Animated->new(
         image           => Games::Maze::SDL->sharedir->file('hero.png'),
-        rect            => SDL::Rect->new( 0, 0, 48, 48 ),
+        rect            => SDL::Rect->new( 0, 0, 24, 24 ),
         ticks_per_frame => 10,
         type            => 'reverse',
         sequences       => {
