@@ -77,6 +77,18 @@ has 'player_y' => (
     init_arg   => undef,
 );
 
+has 'player_width' => (
+    is       => 'rw',
+    isa      => 'Num',
+    required => 1,
+);
+
+has 'player_height' => (
+    is       => 'rw',
+    isa      => 'Num',
+    required => 1,
+);
+
 has 'player_direction' => (
     is      => 'rw',
     isa     => 'Games::Maze::SDL::Direction',
@@ -191,49 +203,58 @@ sub move_player {
     my $cell_y = floor( $self->player_y + 0.5 );
     my $paths  = $self->paths( $cell_x, $cell_y );
 
-    my ( $dx, $dy ) = ( 0.02, 0.02 );
+    my $dx = ( 1 - $self->player_width ) / 2;
+    my $dy = ( 1 - $self->player_height ) / 2;
 
     if ( $d eq 'south' ) {
         my $new_y = $y + $v * $dt;
-        if ( $paths->{$d} ) {
-            $new_y = $cell_y if $x > $cell_x + $dx;
-            $new_y = $cell_y if $x < $cell_x - $dx;
-        }
-        else {
-            $new_y = $cell_y if $new_y > $cell_y;
+        if ( $new_y > $cell_y + $dy ) {
+            if ( $paths->{$d} ) {
+                $new_y = $cell_y + $dy if $x > $cell_x + $dx;
+                $new_y = $cell_y + $dy if $x < $cell_x - $dx;
+            }
+            else {
+                $new_y = $cell_y + $dy;
+            }
         }
         $self->player_y($new_y);
     }
     elsif ( $d eq 'north' ) {
         my $new_y = $y - $v * $dt;
-        if ( $paths->{$d} ) {
-            $new_y = $cell_y if $x > $cell_x + $dx;
-            $new_y = $cell_y if $x < $cell_x - $dx;
-        }
-        else {
-            $new_y = $cell_y if $new_y < $cell_y;
+        if ( $new_y < $cell_y - $dy ) {
+            if ( $paths->{$d} ) {
+                $new_y = $cell_y - $dy if $x > $cell_x + $dx;
+                $new_y = $cell_y - $dy if $x < $cell_x - $dx;
+            }
+            else {
+                $new_y = $cell_y - $dy;
+            }
         }
         $self->player_y($new_y);
     }
     elsif ( $d eq 'east' ) {
         my $new_x = $x + $v * $dt;
-        if ( $paths->{$d} ) {
-            $new_x = $cell_x if $y > $cell_y + $dy;
-            $new_x = $cell_x if $y < $cell_y - $dy;
-        }
-        else {
-            $new_x = $cell_x if $new_x > $cell_x;
+        if ( $new_x > $cell_x + $dx ) {
+            if ( $paths->{$d} ) {
+                $new_x = $cell_x + $dx if $y > $cell_y + $dy;
+                $new_x = $cell_x + $dx if $y < $cell_y - $dy;
+            }
+            else {
+                $new_x = $cell_x + $dx;
+            }
         }
         $self->player_x($new_x);
     }
     elsif ( $d eq 'west' ) {
         my $new_x = $x - $v * $dt;
-        if ( $paths->{$d} ) {
-            $new_x = $cell_x if $y > $cell_y + $dy;
-            $new_x = $cell_x if $y < $cell_y - $dy;
-        }
-        else {
-            $new_x = $cell_x if $new_x < $cell_x;
+        if ( $new_x < $cell_x - $dx ) {
+            if ( $paths->{$d} ) {
+                $new_x = $cell_x - $dx if $y > $cell_y + $dy;
+                $new_x = $cell_x - $dx if $y < $cell_y - $dy;
+            }
+            else {
+                $new_x = $cell_x - $dx;
+            }
         }
         $self->player_x($new_x);
     }

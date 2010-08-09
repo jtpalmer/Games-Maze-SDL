@@ -12,19 +12,29 @@ use Path::Class;
 sub run {
     my ( $self, %options ) = @_;
 
+    my $width         = 1000;
+    my $height        = 800;
+    my $player_width  = 48;
+    my $player_height = 48;
+    my $cells_x       = 15;
+    my $cells_y       = 12;
+    my $dt            = 25;
+
     my $model = Games::Maze::SDL::Model->new(
-        width  => 20,
-        height => 16,
+        width         => $cells_x,
+        height        => $cells_y,
+        player_width  => $player_width / ( $width / $cells_x ),
+        player_height => $player_height / ( $height / $cells_y ),
     );
 
     my $view = Games::Maze::SDL::View->new(
         model  => $model,
-        width  => 1000,
-        height => 800,
+        width  => $width,
+        height => $height,
     );
 
     my $controller = Games::Maze::SDL::Controller->new(
-        dt    => 25,
+        dt    => $dt,
         model => $model,
         view  => $view,
     );
