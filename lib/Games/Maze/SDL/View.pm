@@ -174,7 +174,7 @@ sub clear {
 }
 
 sub draw_cells {
-    my ( $self, $x_min, $x_max, $y_min, $y_max ) = @_;
+    my ( $self, $x_min, $y_min, $x_max, $y_max ) = @_;
 
     my $color = $self->wall_color;
 
@@ -209,7 +209,7 @@ sub draw_maze {
 
     my $color = $self->wall_color;
 
-    $self->draw_cells( 1, $self->model->width, 1, $self->model->height );
+    $self->draw_cells( 1, 1, $self->model->width, $self->model->height );
 
     $self->display->draw_rect(
         [   $self->translate_x( $self->model->exit_x - 0.1 ),
@@ -229,7 +229,7 @@ sub draw_player {
 
     my $x = floor( $self->model->player_x + 0.5 );
     my $y = floor( $self->model->player_y + 0.5 );
-    $self->draw_cells( $x - 1, $x + 1, $y - 1, $y + 1 );
+    $self->draw_cells( $x - 1, $y - 1, $x + 1, $y + 1 );
 
     $self->player->draw( $self->display );
 
