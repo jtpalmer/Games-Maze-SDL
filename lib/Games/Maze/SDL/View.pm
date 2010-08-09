@@ -174,23 +174,21 @@ sub clear {
 }
 
 sub draw_cells {
-    my ( $self, $x_range, $y_range ) = @_;
+    my ( $self, $x_min, $x_max, $y_min, $y_max ) = @_;
 
     my $color = $self->wall_color;
 
-    $y_range->[0] = 1 if $y_range->[0] < 1;
-    $x_range->[0] = 1 if $x_range->[0] < 1;
-    $y_range->[1] = $self->model->height
-        if $y_range->[1] > $self->model->height;
-    $x_range->[1] = $self->model->width
-        if $x_range->[1] > $self->model->width;
+    $y_min = 1                    if $y_min < 1;
+    $x_min = 1                    if $x_min < 1;
+    $y_max = $self->model->height if $y_max > $self->model->height;
+    $x_max = $self->model->width  if $x_max > $self->model->width;
 
-    for my $y ( $y_range->[0] .. $y_range->[1] ) {
+    for my $y ( $y_min .. $y_max ) {
 
         my $y1 = $self->translate_y( $y - 0.5 );
         my $y2 = $self->translate_y( $y + 0.5 );
 
-        for my $x ( $x_range->[0] .. $x_range->[1] ) {
+        for my $x ( $x_min .. $x_max ) {
 
             my $x1 = $self->translate_x( $x - 0.5 );
             my $x2 = $self->translate_x( $x + 0.5 );
@@ -211,8 +209,7 @@ sub draw_maze {
 
     my $color = $self->wall_color;
 
-    $self->draw_cells( [ 1, $self->model->width ],
-        [ 1, $self->model->height ] );
+    $self->draw_cells( 1, $self->model->width, 1, $self->model->height );
 
     $self->display->draw_rect(
         [   $self->translate_x( $self->model->exit_x - 0.1 ),
@@ -232,7 +229,7 @@ sub draw_player {
 
     my $x = floor( $self->model->player_x + 0.5 );
     my $y = floor( $self->model->player_y + 0.5 );
-    $self->draw_cells( [ $x - 1, $x + 1 ], [ $y - 1, $y + 1 ] );
+    $self->draw_cells( $x - 1, $x + 1, $y - 1, $y + 1 );
 
     $self->player->draw( $self->display );
 
