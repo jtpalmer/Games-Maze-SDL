@@ -125,14 +125,18 @@ sub BUILD {
 sub _build_maze {
     my ($self) = @_;
     my $maze = Games::Maze->new(
-        dimensions => [ $self->cells_x, $self->cells_y, 1 ] );
+        form       => 'Rectangle',
+        cell       => 'Quad',
+        dimensions => [ $self->cells_x, $self->cells_y, 1 ]
+    );
     $maze->make();
     return $maze;
 }
 
 sub _build_cells {
     my ($self) = @_;
-    my @rows = ( split /\n/, $self->maze->to_hex_dump )[ 1 .. $self->cells_y ];
+    my @rows
+        = ( split /\n/, $self->maze->to_hex_dump )[ 1 .. $self->cells_y ];
     my @cells = map {
         [ ( map {hex} split /\W/ )[ 2 .. $self->cells_x + 1 ] ]
     } @rows;
@@ -232,11 +236,11 @@ sub move_player {
     return if $v == 0;
 
     my $cell_x = floor( $self->player_x / $self->cell_width ) + 1;
-    my $cell_y = floor( $self->player_y / $self->cell_height  ) + 1;
+    my $cell_y = floor( $self->player_y / $self->cell_height ) + 1;
     my $paths  = $self->paths( $cell_x, $cell_y );
 
-    $cell_x = ($cell_x - 1) * $self->cell_width;
-    $cell_y = ($cell_y - 1) * $self->cell_height;
+    $cell_x = ( $cell_x - 1 ) * $self->cell_width;
+    $cell_y = ( $cell_y - 1 ) * $self->cell_height;
 
     my $cell_y_min = $cell_y + 1;
     my $cell_y_max = $cell_y + $self->cell_width - $self->player_width;
