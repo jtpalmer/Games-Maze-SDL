@@ -10,13 +10,25 @@ use POSIX 'floor';
 
 with 'Games::Maze::SDL::Observable';
 
-has 'width' => (
+has 'cells_x' => (
     is       => 'ro',
     isa      => 'Int',
     required => 1,
 );
 
-has 'height' => (
+has 'cells_y' => (
+    is       => 'ro',
+    isa      => 'Int',
+    required => 1,
+);
+
+has 'cell_width' => (
+    is       => 'ro',
+    isa      => 'Int',
+    required => 1,
+);
+
+has 'cell_height' => (
     is       => 'ro',
     isa      => 'Int',
     required => 1,
@@ -79,13 +91,13 @@ has 'player_y' => (
 
 has 'player_width' => (
     is       => 'rw',
-    isa      => 'Num',
+    isa      => 'Int',
     required => 1,
 );
 
 has 'player_height' => (
     is       => 'rw',
-    isa      => 'Num',
+    isa      => 'Int',
     required => 1,
 );
 
@@ -113,16 +125,16 @@ sub BUILD {
 sub _build_maze {
     my ($self) = @_;
     my $maze = Games::Maze->new(
-        dimensions => [ $self->width, $self->height, 1 ] );
+        dimensions => [ $self->cells_x, $self->cells_y, 1 ] );
     $maze->make();
     return $maze;
 }
 
 sub _build_cells {
     my ($self) = @_;
-    my @rows = ( split /\n/, $self->maze->to_hex_dump )[ 1 .. $self->height ];
+    my @rows = ( split /\n/, $self->maze->to_hex_dump )[ 1 .. $self->cells_y ];
     my @cells = map {
-        [ ( map {hex} split /\W/ )[ 2 .. $self->width + 1 ] ]
+        [ ( map {hex} split /\W/ )[ 2 .. $self->cells_x + 1 ] ]
     } @rows;
     return \@cells;
 }
@@ -163,17 +175,6 @@ sub _build_player_y {
     return $self->entry_y;
 }
 
-sub paths {
-    my ( $self, $x, $y ) = @_;
-    my $cell = $self->cells->[ $y - 1 ][ $x - 1 ];
-    return {
-        north => $cell & $Games::Maze::North,
-        south => $cell & $Games::Maze::South,
-        east  => $cell & $Games::Maze::East,
-        west  => $cell & $Games::Maze::West,
-    };
-}
-
 after qw(player_x player_y player_direction player_velocity) => sub {
     my $self = shift;
 
@@ -186,10 +187,41 @@ after 'player_direction' => sub {
     my $self = shift;
 
     if (@_) {
-        $self->player_velocity(0.002);
+        $self->player_velocity(0.1);
         $self->notify_observers( { type => 'player_turned' } );
     }
 };
+
+sub scale_x {
+    my ( $self, $x ) = @_;
+    return $self->cell_width * $x;
+}
+
+sub scale_y {
+    my ( $self, $y ) = @_;
+    return $self->cell_height * $y;
+}
+
+sub translate_x {
+    my ( $self, $x ) = @_;
+    return $self->cell_width * ( $x - 1 ) + $self->cell_width / 2;
+}
+
+sub translate_y {
+    my ( $self, $y ) = @_;
+    return $self->cell_height * ( $y - 1 ) + $self->cell_height / 2;
+}
+
+sub paths {
+    my ( $self, $x, $y ) = @_;
+    my $cell = $self->cells->[ $y - 1 ][ $x - 1 ];
+    return {
+        north => $cell & $Games::Maze::North,
+        south => $cell & $Games::Maze::South,
+        east  => $cell & $Games::Maze::East,
+        west  => $cell & $Games::Maze::West,
+    };
+}
 
 sub move_player {
     my ( $self, $dt ) = @_;
@@ -199,61 +231,66 @@ sub move_player {
 
     return if $v == 0;
 
-    my $cell_x = floor( $self->player_x + 0.5 );
-    my $cell_y = floor( $self->player_y + 0.5 );
+    my $cell_x = floor( $self->player_x / $self->cell_width ) + 1;
+    my $cell_y = floor( $self->player_y / $self->cell_height  ) + 1;
     my $paths  = $self->paths( $cell_x, $cell_y );
 
-    my $dx = ( 1 - $self->player_width ) / 2;
-    my $dy = ( 1 - $self->player_height ) / 2;
+    $cell_x = ($cell_x - 1) * $self->cell_width;
+    $cell_y = ($cell_y - 1) * $self->cell_height;
+
+    my $cell_y_min = $cell_y + 1;
+    my $cell_y_max = $cell_y + $self->cell_width - $self->player_width;
+    my $cell_x_min = $cell_x + 1;
+    my $cell_x_max = $cell_x + $self->cell_height - $self->player_width;
 
     if ( $d eq 'south' ) {
         my $new_y = $y + $v * $dt;
-        if ( $new_y > $cell_y + $dy ) {
+        if ( $new_y > $cell_y_max ) {
             if ( $paths->{$d} ) {
-                $new_y = $cell_y + $dy if $x > $cell_x + $dx;
-                $new_y = $cell_y + $dy if $x < $cell_x - $dx;
+                $new_y = $cell_y_max if $x > $cell_x_max;
+                $new_y = $cell_y_max if $x < $cell_x_min;
             }
             else {
-                $new_y = $cell_y + $dy;
+                $new_y = $cell_y_max;
             }
         }
         $self->player_y($new_y);
     }
     elsif ( $d eq 'north' ) {
         my $new_y = $y - $v * $dt;
-        if ( $new_y < $cell_y - $dy ) {
+        if ( $new_y < $cell_y_min ) {
             if ( $paths->{$d} ) {
-                $new_y = $cell_y - $dy if $x > $cell_x + $dx;
-                $new_y = $cell_y - $dy if $x < $cell_x - $dx;
+                $new_y = $cell_y_min if $x > $cell_x_max;
+                $new_y = $cell_y_min if $x < $cell_x_min;
             }
             else {
-                $new_y = $cell_y - $dy;
+                $new_y = $cell_y_min;
             }
         }
         $self->player_y($new_y);
     }
     elsif ( $d eq 'east' ) {
         my $new_x = $x + $v * $dt;
-        if ( $new_x > $cell_x + $dx ) {
+        if ( $new_x > $cell_x_max ) {
             if ( $paths->{$d} ) {
-                $new_x = $cell_x + $dx if $y > $cell_y + $dy;
-                $new_x = $cell_x + $dx if $y < $cell_y - $dy;
+                $new_x = $cell_x_max if $y > $cell_y_max;
+                $new_x = $cell_x_max if $y < $cell_y_min;
             }
             else {
-                $new_x = $cell_x + $dx;
+                $new_x = $cell_x_max;
             }
         }
         $self->player_x($new_x);
     }
     elsif ( $d eq 'west' ) {
         my $new_x = $x - $v * $dt;
-        if ( $new_x < $cell_x - $dx ) {
+        if ( $new_x < $cell_x_min ) {
             if ( $paths->{$d} ) {
-                $new_x = $cell_x - $dx if $y > $cell_y + $dy;
-                $new_x = $cell_x - $dx if $y < $cell_y - $dy;
+                $new_x = $cell_x_min if $y > $cell_y_max;
+                $new_x = $cell_x_min if $y < $cell_y_min;
             }
             else {
-                $new_x = $cell_x - $dx;
+                $new_x = $cell_x_min;
             }
         }
         $self->player_x($new_x);
@@ -280,6 +317,4 @@ __END__
     use Games::Maze::SDL::Model;
 
     my $model = Games::Maze::SDL::Model->new(
-        width  => $width,
-        height => $height,
     );

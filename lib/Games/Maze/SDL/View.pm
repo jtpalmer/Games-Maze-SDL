@@ -27,20 +27,6 @@ has 'height' => (
     required => 1,
 );
 
-has 'cell_width' => (
-    is         => 'ro',
-    isa        => 'Num',
-    lazy_build => 1,
-    init_arg   => undef,
-);
-
-has 'cell_height' => (
-    is         => 'ro',
-    isa        => 'Num',
-    lazy_build => 1,
-    init_arg   => undef,
-);
-
 has 'background_color' => (
     is      => 'ro',
     default => sub { [ 0, 0, 0, 255 ] },
@@ -81,8 +67,8 @@ sub BUILD {
     my ($self) = @_;
 
     $self->model->add_observer( sub { $self->handle_event(@_) } );
-    $self->player->x( $self->translate_player_x( $self->model->player_x ) );
-    $self->player->y( $self->translate_player_y( $self->model->player_y ) );
+    $self->player->x( $self->model->player_x );
+    $self->player->y( $self->model->player_y );
 
     $self->clear;
     $self->draw_maze;
@@ -97,16 +83,6 @@ sub _build_display {
         width  => $self->width,
         height => $self->height,
     );
-}
-
-sub _build_cell_width {
-    my ($self) = @_;
-    return $self->width / $self->model->width;
-}
-
-sub _build_cell_height {
-    my ($self) = @_;
-    return $self->height / $self->model->height;
 }
 
 sub _build_player {
@@ -137,36 +113,6 @@ sub _build_player_old_rect {
     return SDL::Rect->new( $rect->x, $rect->y, $rect->w, $rect->h );
 }
 
-sub scale_x {
-    my ( $self, $x ) = @_;
-    return $self->cell_width * $x;
-}
-
-sub scale_y {
-    my ( $self, $y ) = @_;
-    return $self->cell_height * $y;
-}
-
-sub translate_x {
-    my ( $self, $x ) = @_;
-    return $self->cell_width * ( $x - 1 ) + $self->cell_width / 2;
-}
-
-sub translate_y {
-    my ( $self, $y ) = @_;
-    return $self->cell_height * ( $y - 1 ) + $self->cell_height / 2;
-}
-
-sub translate_player_x {
-    my ( $self, $x ) = @_;
-    return $self->translate_x($x) - $self->player->clip->w / 2;
-}
-
-sub translate_player_y {
-    my ( $self, $y ) = @_;
-    return $self->translate_y($y) - $self->player->clip->h / 2;
-}
-
 sub clear {
     my ($self) = @_;
     $self->display->draw_rect( [ 0, 0, $self->width - 1, $self->height - 1 ],
@@ -178,20 +124,20 @@ sub draw_cells {
 
     my $color = $self->wall_color;
 
-    $y_min = 1                    if $y_min < 1;
-    $x_min = 1                    if $x_min < 1;
-    $y_max = $self->model->height if $y_max > $self->model->height;
-    $x_max = $self->model->width  if $x_max > $self->model->width;
+    $y_min = 1                     if $y_min < 1;
+    $x_min = 1                     if $x_min < 1;
+    $y_max = $self->model->cells_y if $y_max > $self->model->cells_y;
+    $x_max = $self->model->cells_x if $x_max > $self->model->cells_x;
 
     for my $y ( $y_min .. $y_max ) {
 
-        my $y1 = $self->translate_y( $y - 0.5 );
-        my $y2 = $self->translate_y( $y + 0.5 );
+        my $y1 = $self->model->translate_y( $y - 0.5 );
+        my $y2 = $self->model->translate_y( $y + 0.5 );
 
         for my $x ( $x_min .. $x_max ) {
 
-            my $x1 = $self->translate_x( $x - 0.5 );
-            my $x2 = $self->translate_x( $x + 0.5 );
+            my $x1 = $self->model->translate_x( $x - 0.5 );
+            my $x2 = $self->model->translate_x( $x + 0.5 );
 
             my $paths = $self->model->paths( $x, $y );
 
@@ -209,13 +155,13 @@ sub draw_maze {
 
     my $color = $self->wall_color;
 
-    $self->draw_cells( 1, 1, $self->model->width, $self->model->height );
+    $self->draw_cells( 1, 1, $self->model->cells_x, $self->model->cells_y );
 
     $self->display->draw_rect(
-        [   $self->translate_x( $self->model->exit_x - 0.1 ),
-            $self->translate_y( $self->model->exit_y - 0.1 ),
-            $self->scale_x(0.2),
-            $self->scale_y(0.2),
+        [   $self->model->translate_x( $self->model->exit_x - 0.1 ),
+            $self->model->translate_y( $self->model->exit_y - 0.1 ),
+            $self->model->scale_x(0.2),
+            $self->model->scale_y(0.2),
         ],
         $self->exit_color
     );
@@ -226,10 +172,6 @@ sub draw_player {
 
     $self->display->draw_rect( $self->player_old_rect,
         $self->background_color );
-
-    my $x = floor( $self->model->player_x + 0.5 );
-    my $y = floor( $self->model->player_y + 0.5 );
-    $self->draw_cells( $x - 1, $y - 1, $x + 1, $y + 1 );
 
     $self->player->draw( $self->display );
 
@@ -252,10 +194,8 @@ sub handle_event {
     my ( $self, $event ) = @_;
 
     if ( $event->{type} eq 'player_moved' ) {
-        $self->player->x(
-            $self->translate_player_x( $self->model->player_x ) );
-        $self->player->y(
-            $self->translate_player_y( $self->model->player_y ) );
+        $self->player->x( $self->model->player_x );
+        $self->player->y( $self->model->player_y );
     }
     elsif ( $event->{type} eq 'player_turned' ) {
         $self->player->sequence( $self->model->player_direction );

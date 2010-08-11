@@ -14,6 +14,8 @@ sub run {
 
     my $width         = 640;
     my $height        = 480;
+    my $cell_width    = 40;
+    my $cell_height   = 40;
     my $player_width  = 24;
     my $player_height = 24;
     my $cells_x       = 15;
@@ -21,10 +23,12 @@ sub run {
     my $dt            = 25;
 
     my $model = Games::Maze::SDL::Model->new(
-        width         => $cells_x,
-        height        => $cells_y,
-        player_width  => ($player_width + 1) / ( $width / $cells_x ),
-        player_height => ($player_height + 1) / ( $height / $cells_y ),
+        cells_x       => $cells_x,
+        cells_y       => $cells_y,
+        cell_width    => $cell_width,
+        cell_height   => $cell_height,
+        player_width  => $player_width,
+        player_height => $player_height,
     );
 
     my $view = Games::Maze::SDL::View->new(
