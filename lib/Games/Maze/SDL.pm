@@ -38,7 +38,7 @@ sub run {
     );
 
     my $player_view
-        = Games::Maze::SDL::View::Player->new( model => $player_model, );
+        = Games::Maze::SDL::View::Player->new( model => $player_model );
 
     my $maze_view = Games::Maze::SDL::View::Maze->new(
         model  => $maze_model,
@@ -48,9 +48,15 @@ sub run {
     );
 
     my $controller = Games::Maze::SDL::Controller->new(
-        dt     => $dt,
-        player => $player_model,
-        view   => $maze_view,
+        dt    => $dt,
+        model => {
+            maze   => $maze_model,
+            player => $player_model,
+        },
+        view => {
+            maze   => $maze_view,
+            player => $player_view,
+        },
     );
 
     $controller->run;
@@ -74,7 +80,7 @@ __END__
 
     use Games::Maze::SDL;
 
-    Games::Maze::SDL->play;
+    Games::Maze::SDL->run( %options );
 
 =head1 SEE ALSO
 
