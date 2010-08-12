@@ -1,4 +1,4 @@
-package Games::Maze::SDL::Observable;
+package Games::Maze::SDL::Role::Observable;
 
 # ABSTRACT: Observable role.
 

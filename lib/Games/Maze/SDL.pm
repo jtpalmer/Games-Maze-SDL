@@ -3,8 +3,10 @@ package Games::Maze::SDL;
 # ABSTRACT: Maze game; using SDL!
 
 use Moose;
-use Games::Maze::SDL::Model;
-use Games::Maze::SDL::View;
+use Games::Maze::SDL::Model::Maze;
+use Games::Maze::SDL::Model::Player;
+use Games::Maze::SDL::View::Maze;
+use Games::Maze::SDL::View::Player;
 use Games::Maze::SDL::Controller;
 use FindBin;
 use Path::Class;
@@ -22,25 +24,33 @@ sub run {
     my $cells_y       = 12;
     my $dt            = 25;
 
-    my $model = Games::Maze::SDL::Model->new(
-        cells_x       => $cells_x,
-        cells_y       => $cells_y,
-        cell_width    => $cell_width,
-        cell_height   => $cell_height,
-        player_width  => $player_width,
-        player_height => $player_height,
+    my $maze_model = Games::Maze::SDL::Model::Maze->new(
+        cells_x     => $cells_x,
+        cells_y     => $cells_y,
+        cell_width  => $cell_width,
+        cell_height => $cell_height,
     );
 
-    my $view = Games::Maze::SDL::View->new(
-        model  => $model,
+    my $player_model = Games::Maze::SDL::Model::Player->new(
+        maze   => $maze_model,
+        width  => $player_width,
+        height => $player_height,
+    );
+
+    my $player_view
+        = Games::Maze::SDL::View::Player->new( model => $player_model, );
+
+    my $maze_view = Games::Maze::SDL::View::Maze->new(
+        model  => $maze_model,
+        player => $player_view,
         width  => $width,
         height => $height,
     );
 
     my $controller = Games::Maze::SDL::Controller->new(
-        dt    => $dt,
-        model => $model,
-        view  => $view,
+        dt     => $dt,
+        player => $player_model,
+        view   => $maze_view,
     );
 
     $controller->run;

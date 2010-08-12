@@ -4,22 +4,22 @@ package Games::Maze::SDL::Controller;
 
 use Moose;
 use MooseX::NonMoose::InsideOut;
-use Games::Maze::SDL::Model;
-use Games::Maze::SDL::View;
+use Games::Maze::SDL::Model::Player;
+use Games::Maze::SDL::View::Maze;
 use SDL::Event;
 use SDL::Events ':all';
 
 extends 'SDLx::Controller';
 
-has 'model' => (
+has 'player' => (
     is       => 'ro',
-    isa      => 'Games::Maze::SDL::Model',
+    isa      => 'Games::Maze::SDL::Model::Player',
     required => 1,
 );
 
 has 'view' => (
     is       => 'ro',
-    isa      => 'Games::Maze::SDL::View',
+    isa      => 'Games::Maze::SDL::View::Maze',
     required => 1,
 );
 
@@ -27,7 +27,7 @@ sub BUILD {
     my ($self) = @_;
 
     $self->add_event_handler( sub { $self->on_event(@_) } );
-    $self->add_move_handler( sub  { $self->model->move_player(@_) } );
+    $self->add_move_handler( sub  { $self->player->move(@_) } );
     $self->add_show_handler( sub  { $self->view->draw(@_) } );
 
     return $self;
@@ -40,22 +40,18 @@ sub on_event {
     return 0 if $e->key_sym == SDLK_ESCAPE;
 
     if ( $e->type == SDL_KEYDOWN ) {
-        $self->model->player_direction('west')  if $e->key_sym == SDLK_LEFT;
-        $self->model->player_direction('east')  if $e->key_sym == SDLK_RIGHT;
-        $self->model->player_direction('south') if $e->key_sym == SDLK_DOWN;
-        $self->model->player_direction('north') if $e->key_sym == SDLK_UP;
+        $self->player->direction('west')  if $e->key_sym == SDLK_LEFT;
+        $self->player->direction('east')  if $e->key_sym == SDLK_RIGHT;
+        $self->player->direction('south') if $e->key_sym == SDLK_DOWN;
+        $self->player->direction('north') if $e->key_sym == SDLK_UP;
     }
     elsif ( $e->type == SDL_KEYUP ) {
-        my $d = $self->model->player_direction;
+        my $d = $self->player->direction;
 
-        $self->model->stop_player
-            if $e->key_sym == SDLK_LEFT && $d eq 'west';
-        $self->model->stop_player
-            if $e->key_sym == SDLK_RIGHT && $d eq 'east';
-        $self->model->stop_player
-            if $e->key_sym == SDLK_DOWN && $d eq 'south';
-        $self->model->stop_player
-            if $e->key_sym == SDLK_UP && $d eq 'north';
+        $self->player->stop if $e->key_sym == SDLK_LEFT  && $d eq 'west';
+        $self->player->stop if $e->key_sym == SDLK_RIGHT && $d eq 'east';
+        $self->player->stop if $e->key_sym == SDLK_DOWN  && $d eq 'south';
+        $self->player->stop if $e->key_sym == SDLK_UP    && $d eq 'north';
     }
 
     return 1;
@@ -73,6 +69,7 @@ __END__
     use Games::Maze::SDL::Controller;
 
     my $controller = Games::Maze::SDL::Controller->new(
-        model => $model,
-        view  => $view,
+        dt     => $dt
+        player => $player_model,
+        view   => $maze_view,
     );
