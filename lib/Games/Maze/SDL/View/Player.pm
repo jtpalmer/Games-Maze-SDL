@@ -66,6 +66,8 @@ sub handle_event {
     if ( $event->{type} eq 'moved' ) {
         $self->sprite->x( $self->model->x );
         $self->sprite->y( $self->model->y );
+        $self->sprite->ticks_per_frame(
+            floor( 0.2 / $self->model->velocity ) + 5 );
     }
     elsif ( $event->{type} eq 'turned' ) {
         $self->sprite->sequence( $self->model->direction );

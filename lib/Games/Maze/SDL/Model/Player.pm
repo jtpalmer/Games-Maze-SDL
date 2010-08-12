@@ -48,6 +48,18 @@ has 'velocity' => (
     default => 0,
 );
 
+has 'max_velocity' => (
+    is      => 'ro',
+    isa     => 'Num',
+    default => 0.1,
+);
+
+has 'acceleration' => (
+    is      => 'rw',
+    isa     => 'Num',
+    default => 0,
+);
+
 has 'maze' => (
     is       => 'rw',
     isa      => 'Games::Maze::SDL::Model::Maze',
@@ -78,7 +90,8 @@ after 'direction' => sub {
     my $self = shift;
 
     if (@_) {
-        $self->velocity(0.1);
+        $self->velocity( $self->velocity * 0.3 );
+        $self->acceleration(0.0001);
         $self->notify_observers( { type => 'turned' } );
     }
 };
@@ -86,8 +99,27 @@ after 'direction' => sub {
 sub move {
     my ( $self, $dt ) = @_;
 
-    my ( $x, $y ) = ( $self->x,        $self->y );
-    my ( $v, $d ) = ( $self->velocity, $self->direction );
+    my ( $x, $y ) = ( $self->x,            $self->y );
+    my ( $a, $v ) = ( $self->acceleration, $self->velocity );
+    my $d = $self->direction;
+
+    if ( $a == 0 ) {
+        $v = $v * 0.9;
+    }
+    else {
+        $v = $v + $dt * $a;
+    }
+
+    if ( $v < 0.001 ) {
+        $v = $self->velocity(0);
+        $self->notify_observers( { type => 'stopped' } );
+    }
+    else {
+        if ( $v > $self->max_velocity ) {
+            $v = $self->max_velocity;
+        }
+        $self->velocity($v);
+    }
 
     return if $v == 0;
 
@@ -161,8 +193,7 @@ sub move {
 
 sub stop {
     my ($self) = @_;
-    $self->velocity(0);
-    $self->notify_observers( { type => 'stopped' } );
+    $self->acceleration(0);
 }
 
 no Moose;
