@@ -97,7 +97,7 @@ after 'direction' => sub {
 };
 
 sub move {
-    my ( $self, $dt ) = @_;
+    my ( $self, undef, $dt ) = @_;
 
     my ( $x, $y ) = ( $self->x,            $self->y );
     my ( $a, $v ) = ( $self->acceleration, $self->velocity );
