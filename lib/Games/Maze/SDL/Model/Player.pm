@@ -183,9 +183,10 @@ sub move {
         }
     );
 
-    my @dimensions = abs($v{y}) > abs($v{x})
-        ? ([qw( x y )], [qw( y x )])
-        : ([qw( y x )], [qw( x y )]);
+    my @dimensions
+        = abs( $v{y} ) > abs( $v{x} )
+        ? ( [qw( x y )], [qw( y x )] )
+        : ( [qw( y x )], [qw( x y )] );
     foreach my $dimensions (@dimensions) {
         my ( $dimension, $other_dimension ) = @$dimensions;
 
