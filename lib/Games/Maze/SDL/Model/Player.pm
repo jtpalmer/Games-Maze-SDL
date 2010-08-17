@@ -10,18 +10,10 @@ use POSIX 'floor';
 
 with 'Games::Maze::SDL::Role::Observable';
 
-has 'x' => (
-    is         => 'rw',
-    isa        => 'Num',
-    lazy_build => 1,
-    init_arg   => undef,
-);
-
-has 'y' => (
-    is         => 'rw',
-    isa        => 'Num',
-    lazy_build => 1,
-    init_arg   => undef,
+has 'maze' => (
+    is       => 'rw',
+    isa      => 'Games::Maze::SDL::Model::Maze',
+    required => 1,
 );
 
 has 'width' => (
@@ -42,7 +34,27 @@ has 'direction' => (
     default => 'south',
 );
 
-has 'velocity' => (
+has 'x' => (
+    is         => 'rw',
+    isa        => 'Num',
+    lazy_build => 1,
+    init_arg   => undef,
+);
+
+has 'y' => (
+    is         => 'rw',
+    isa        => 'Num',
+    lazy_build => 1,
+    init_arg   => undef,
+);
+
+has 'velocity_x' => (
+    is      => 'rw',
+    isa     => 'Num',
+    default => 0,
+);
+
+has 'velocity_y' => (
     is      => 'rw',
     isa     => 'Num',
     default => 0,
@@ -54,16 +66,16 @@ has 'max_velocity' => (
     default => 0.1,
 );
 
-has 'acceleration' => (
+has 'acceleration_y' => (
     is      => 'rw',
     isa     => 'Num',
     default => 0,
 );
 
-has 'maze' => (
-    is       => 'rw',
-    isa      => 'Games::Maze::SDL::Model::Maze',
-    required => 1,
+has 'acceleration_x' => (
+    is      => 'rw',
+    isa     => 'Num',
+    default => 0,
 );
 
 sub _build_x {
@@ -78,7 +90,7 @@ sub _build_y {
         - $self->height / 2;
 }
 
-after qw( x y direction velocity ) => sub {
+after qw( x y direction velocity_x velocity_y ) => sub {
     my $self = shift;
 
     if (@_) {
@@ -90,110 +102,139 @@ after 'direction' => sub {
     my $self = shift;
 
     if (@_) {
-        $self->velocity( $self->velocity * 0.3 );
-        $self->acceleration(0.0001);
+        my $d = shift;
+        if ( $d eq 'north' ) {
+            $self->acceleration_x(0);
+            $self->acceleration_y(-0.0001);
+        }
+        if ( $d eq 'south' ) {
+            $self->acceleration_x(0);
+            $self->acceleration_y(0.0001);
+        }
+        if ( $d eq 'west' ) {
+            $self->acceleration_x(-0.0001);
+            $self->acceleration_y(0);
+        }
+        if ( $d eq 'east' ) {
+            $self->acceleration_x(0.0001);
+            $self->acceleration_y(0);
+        }
+
         $self->notify_observers( { type => 'turned' } );
     }
 };
 
+sub velocity {
+    my ($self) = @_;
+
+    my $vx = $self->velocity_x;
+    my $vy = $self->velocity_y;
+
+    return sqrt( $vx * $vx + $vy * $vy );
+}
+
 sub move {
     my ( $self, undef, $dt ) = @_;
 
-    my ( $x, $y ) = ( $self->x,            $self->y );
-    my ( $a, $v ) = ( $self->acceleration, $self->velocity );
-    my $d = $self->direction;
-
-    if ( $a == 0 ) {
-        $v = $v * 0.9;
-    }
-    else {
-        $v = $v + $dt * $a;
-    }
-
-    if ( $v < 0.001 ) {
-        $v = $self->velocity(0);
-        $self->notify_observers( { type => 'stopped' } );
-    }
-    else {
-        if ( $v > $self->max_velocity ) {
-            $v = $self->max_velocity;
-        }
-        $self->velocity($v);
-    }
-
-    return if $v == 0;
+    my %d = ( x => $self->x,              y => $self->y );
+    my %v = ( x => $self->velocity_x,     y => $self->velocity_y );
+    my %a = ( x => $self->acceleration_x, y => $self->acceleration_y );
 
     my $cell_x = floor( $self->x / $self->maze->cell_width ) + 1;
     my $cell_y = floor( $self->y / $self->maze->cell_height ) + 1;
-    my $paths  = $self->maze->paths( $cell_x, $cell_y );
 
-    $cell_x = ( $cell_x - 1 ) * $self->maze->cell_width;
-    $cell_y = ( $cell_y - 1 ) * $self->maze->cell_height;
+    foreach my $dimension (qw( x y )) {
+        my ( $d, $v, $a ) = map { $_->{$dimension} } \( %d, %v, %a );
 
-    my $cell_y_min = $cell_y + 1;
-    my $cell_y_max = $cell_y + $self->maze->cell_width - $self->width;
-    my $cell_x_min = $cell_x + 1;
-    my $cell_x_max = $cell_x + $self->maze->cell_height - $self->width;
+        if ( $a == 0 ) {
+            $v = $v * 0.9;
+        }
+        else {
+            $v = $v + $dt * $a;
+        }
 
-    if ( $d eq 'south' ) {
-        my $new_y = $y + $v * $dt;
-        if ( $new_y > $cell_y_max ) {
-            if ( $paths->{$d} ) {
-                $new_y = $cell_y_max if $x > $cell_x_max;
-                $new_y = $cell_y_max if $x < $cell_x_min;
-            }
-            else {
-                $new_y = $cell_y_max;
-            }
+        my $direction = $v <=> 0;
+        if ( abs($v) < 0.00000001 ) {
+            $v = 0;
         }
-        $self->y($new_y);
-    }
-    elsif ( $d eq 'north' ) {
-        my $new_y = $y - $v * $dt;
-        if ( $new_y < $cell_y_min ) {
-            if ( $paths->{$d} ) {
-                $new_y = $cell_y_min if $x > $cell_x_max;
-                $new_y = $cell_y_min if $x < $cell_x_min;
-            }
-            else {
-                $new_y = $cell_y_min;
-            }
+        elsif ( abs($v) > $self->max_velocity ) {
+            $v = $direction * $self->max_velocity;
         }
-        $self->y($new_y);
-    }
-    elsif ( $d eq 'east' ) {
-        my $new_x = $x + $v * $dt;
-        if ( $new_x > $cell_x_max ) {
-            if ( $paths->{$d} ) {
-                $new_x = $cell_x_max if $y > $cell_y_max;
-                $new_x = $cell_x_max if $y < $cell_y_min;
-            }
-            else {
-                $new_x = $cell_x_max;
-            }
-        }
-        $self->x($new_x);
-    }
-    elsif ( $d eq 'west' ) {
-        my $new_x = $x - $v * $dt;
-        if ( $new_x < $cell_x_min ) {
-            if ( $paths->{$d} ) {
-                $new_x = $cell_x_min if $y > $cell_y_max;
-                $new_x = $cell_x_min if $y < $cell_y_min;
-            }
-            else {
-                $new_x = $cell_x_min;
-            }
-        }
-        $self->x($new_x);
+
+        $d += $v * $dt;
+
+        my $set_d = $dimension;
+        my $set_v = 'velocity_' . $dimension;
+        $self->$set_d($d);
+        $self->$set_v($v);
     }
 
-    $self->notify_observers( { type => 'moved' } );
+    my $paths = $self->maze->paths( $cell_x, $cell_y );
+    my $borders = $self->maze->cell_borders( $cell_x, $cell_y );
+
+    my %limits = (
+        x => {
+            -1 => [ $paths->{west}, $borders->{min_x} ],
+            1  => [ $paths->{east}, $borders->{max_x} - $self->width ],
+        },
+        y => {
+            -1 => [ $paths->{north}, $borders->{min_y} ],
+            1  => [ $paths->{south}, $borders->{max_y} - $self->width ],
+        }
+    );
+
+    my @dimensions = abs($v{y}) > abs($v{x})
+        ? ([qw( x y )], [qw( y x )])
+        : ([qw( y x )], [qw( x y )]);
+    foreach my $dimensions (@dimensions) {
+        my ( $dimension, $other_dimension ) = @$dimensions;
+
+        %d = ( x => $self->x,          y => $self->y );
+        %v = ( x => $self->velocity_x, y => $self->velocity_y );
+
+        my ( $d, $v, $l ) = map { $_->{$dimension} } \( %d, %v, %limits );
+
+        my ( $other_d, $other_l )
+            = map { $_->{$other_dimension} } \( %d, %limits );
+
+        my $other_d_min = $other_l->{-1}->[1];
+        my $other_d_max = $other_l->{1}->[1];
+
+        my $direction = $v <=> 0;
+
+        next if $v == 0;
+
+        my ( $path, $limit ) = @{ $l->{$direction} };
+
+        if ( ( $d <=> $limit ) == $direction ) {
+            if ( !$path ) {
+                $d = $limit;
+                $v = 0;
+            }
+            elsif ( $other_d > $other_d_max || $other_d < $other_d_min ) {
+                $d = $limit;
+                $v = 0;
+            }
+        }
+
+        my $set_d = $dimension;
+        my $set_v = 'velocity_' . $dimension;
+        $self->$set_d($d);
+        $self->$set_v($v);
+    }
+
+    if ( $self->velocity_x == 0 && $self->velocity_y == 0 ) {
+        $self->notify_observers( { type => 'stopped' } );
+    }
+    else {
+        $self->notify_observers( { type => 'moved' } );
+    }
 }
 
 sub stop {
     my ($self) = @_;
-    $self->acceleration(0);
+    $self->acceleration_x(0);
+    $self->acceleration_y(0);
 }
 
 no Moose;

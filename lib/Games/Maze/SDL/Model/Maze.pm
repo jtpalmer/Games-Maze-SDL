@@ -161,6 +161,20 @@ sub paths {
     };
 }
 
+sub cell_borders {
+    my ( $self, $x, $y ) = @_;
+
+    my $min_x = ( $x - 1 ) * $self->cell_width;
+    my $min_y = ( $y - 1 ) * $self->cell_height;
+
+    return {
+        min_x => $min_x + 1,
+        min_y => $min_y + 1,
+        max_x => $min_x + $self->cell_height,
+        max_y => $min_y + $self->cell_width,
+    };
+}
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 
