@@ -143,8 +143,8 @@ sub move {
     my $cell_x = floor( $self->x / $self->maze->cell_width ) + 1;
     my $cell_y = floor( $self->y / $self->maze->cell_height ) + 1;
 
-    foreach my $dimension (qw( x y )) {
-        my ( $d, $v, $a ) = map { $_->{$dimension} } \( %d, %v, %a );
+    foreach my $dim (qw( x y )) {
+        my ( $d, $v, $a ) = map { $_->{$dim} } \( %d, %v, %a );
 
         if ( $a == 0 ) {
             $v = $v * 0.9;
@@ -153,18 +153,18 @@ sub move {
             $v = $v + $dt * $a;
         }
 
-        my $direction = $v <=> 0;
+        my $dir = $v <=> 0;
         if ( abs($v) < 0.00000001 ) {
             $v = 0;
         }
         elsif ( abs($v) > $self->max_velocity ) {
-            $v = $direction * $self->max_velocity;
+            $v = $dir * $self->max_velocity;
         }
 
         $d += $v * $dt;
 
-        my $set_d = $dimension;
-        my $set_v = 'velocity_' . $dimension;
+        my $set_d = $dim;
+        my $set_v = 'velocity_' . $dim;
         $self->$set_d($d);
         $self->$set_v($v);
     }
@@ -183,45 +183,87 @@ sub move {
         }
     );
 
-    my @dimensions
-        = abs( $v{y} ) > abs( $v{x} )
-        ? ( [qw( x y )], [qw( y x )] )
-        : ( [qw( y x )], [qw( x y )] );
-    foreach my $dimensions (@dimensions) {
-        my ( $dimension, $other_dimension ) = @$dimensions;
+    my %old_d = %d;
 
-        %d = ( x => $self->x,          y => $self->y );
-        %v = ( x => $self->velocity_x, y => $self->velocity_y );
+    %d = ( x => $self->x,          y => $self->y );
+    %v = ( x => $self->velocity_x, y => $self->velocity_y );
 
-        my ( $d, $v, $l ) = map { $_->{$dimension} } \( %d, %v, %limits );
+    foreach my $dims ( [qw( x y )], [qw( y x )] ) {
+        my ( $dim, $odim ) = @$dims;
 
-        my ( $other_d, $other_l )
-            = map { $_->{$other_dimension} } \( %d, %limits );
+        my ( $d, $v, $l ) = map { $_->{$dim} } \( %d, %v, %limits );
+        my ( $od, $ov, $ol ) = map { $_->{$odim} } \( %d, %v, %limits );
 
-        my $other_d_min = $other_l->{-1}->[1];
-        my $other_d_max = $other_l->{1}->[1];
+        next unless $ov == 0 && $v != 0;
 
-        my $direction = $v <=> 0;
+        my $od_min = $ol->{-1}->[1];
+        my $od_max = $ol->{1}->[1];
 
-        next if $v == 0;
+        my $dir = $v <=> 0;
 
-        my ( $path, $limit ) = @{ $l->{$direction} };
+        my ( $path, $limit ) = @{ $l->{$dir} };
 
-        if ( ( $d <=> $limit ) == $direction ) {
+        if ( ( $d <=> $limit ) == $dir ) {
             if ( !$path ) {
                 $d = $limit;
                 $v = 0;
             }
-            elsif ( $other_d > $other_d_max || $other_d < $other_d_min ) {
+            elsif ( $od > $od_max || $od < $od_min ) {
                 $d = $limit;
                 $v = 0;
             }
         }
 
-        my $set_d = $dimension;
-        my $set_v = 'velocity_' . $dimension;
+        my $set_d = $dim;
+        my $set_v = 'velocity_' . $dim;
         $self->$set_d($d);
         $self->$set_v($v);
+    }
+
+    if ( $v{x} != 0 && $v{y} != 0 ) {
+        my $xdir = $v{x} <=> 0;
+        my $ydir = $v{y} <=> 0;
+
+        my $xmin = $limits{x}->{-1}->[1];
+        my $xmax = $limits{x}->{1}->[1];
+        my $ymin = $limits{y}->{-1}->[1];
+        my $ymax = $limits{y}->{1}->[1];
+
+        my $xpath = $limits{x}->{$xdir}->[0];
+        my $ypath = $limits{y}->{$ydir}->[0];
+        my $xlim  = $limits{x}->{$xdir}->[1];
+        my $ylim  = $limits{y}->{$ydir}->[1];
+
+        if ( ($d{x} <=> $xlim) == $xdir && ($d{y} <=> $ylim) == $ydir ) {
+            my $m = ($old_d{y} - $d{y}) / ($old_d{x} - $d{x});
+        
+
+        }
+        elsif ( ($d{x} <=> $xlim) == $xdir ) {
+            if ( !$xpath ) {
+                $d{x} = $xlim;
+                $v{x} = 0;
+            }
+            elsif ( $d{y} > $ymax || $d{y} < $ymin) {
+                $d{x} = $xlim;
+                $v{x} = 0;
+            }
+        }
+        elsif ( ($d{y} <=> $ylim) == $ydir ) {
+            if ( !$ypath ) {
+                $d{y} = $ylim;
+                $v{y} = 0;
+            }
+            elsif ( $d{x} > $xmax || $d{x} < $xmin) {
+                $d{y} = $ylim;
+                $v{y} = 0;
+            }
+        }
+
+        $self->x($d{x});
+        $self->y($d{y});
+        $self->velocity_x($v{x});
+        $self->velocity_y($v{y});
     }
 
     if ( $self->velocity_x == 0 && $self->velocity_y == 0 ) {
