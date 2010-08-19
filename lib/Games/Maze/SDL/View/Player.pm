@@ -26,8 +26,6 @@ sub BUILD {
     my ($self) = @_;
 
     $self->model->add_observer( sub { $self->handle_event(@_) } );
-    $self->sprite->x( $self->model->x );
-    $self->sprite->y( $self->model->y );
 
     return $self;
 }
@@ -49,7 +47,11 @@ sub _build_sprite {
         },
     );
 
+    $sprite->alpha_key([ 255, 0, 0 ]);
     $sprite->sequence( $self->model->direction );
+
+    $sprite->x( $self->model->x );
+    $sprite->y( $self->model->y );
 
     return $sprite;
 }
