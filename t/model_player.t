@@ -5,7 +5,8 @@ use Test::MockObject;
 use Games::Maze::SDL::Model::Player;
 
 can_ok( 'Games::Maze::SDL::Model::Player',
-    qw( new x y width height direction velocity max_velocity acceleration maze )
+    qw( new x y width height direction velocity_x velocity_y max_velocity
+    acceleration_x acceleration_y maze )
 );
 
 my $maze = Test::MockObject->new();
@@ -17,6 +18,6 @@ my $player = Games::Maze::SDL::Model::Player->new(
     height => 24,
 );
 
-is( $player->direction, 'south', 'player_direction is "south"' );
+is( $player->direction, 'south', 'player->direction is "south"' );
 
 done_testing;
