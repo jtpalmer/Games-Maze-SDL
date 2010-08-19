@@ -6,6 +6,7 @@ use Moose;
 use Games::Maze::SDL::Types;
 use Games::Maze::SDL::Role::Observable;
 use Games::Maze::SDL::Model::Maze;
+use Collision::2D ':all';
 use POSIX 'floor';
 
 with 'Games::Maze::SDL::Role::Observable';
@@ -140,131 +141,72 @@ sub move {
     my %v = ( x => $self->velocity_x,     y => $self->velocity_y );
     my %a = ( x => $self->acceleration_x, y => $self->acceleration_y );
 
-    my $cell_x = floor( $self->x / $self->maze->cell_width ) + 1;
-    my $cell_y = floor( $self->y / $self->maze->cell_height ) + 1;
-
     foreach my $dim (qw( x y )) {
-        my ( $d, $v, $a ) = map { $_->{$dim} } \( %d, %v, %a );
-
-        if ( $a == 0 ) {
-            $v = $v * 0.9;
+        if ( $a{$dim} == 0 ) {
+            $v{$dim} *= 0.9;
         }
         else {
-            $v = $v + $dt * $a;
+            if ( ( $v{$dim} += $dt * $a{$dim} ) > $self->max_velocity ) {
+                $v{$dim} = $self->max_velocity;
+            }
         }
-
-        my $dir = $v <=> 0;
-        if ( abs($v) < 0.00000001 ) {
-            $v = 0;
-        }
-        elsif ( abs($v) > $self->max_velocity ) {
-            $v = $dir * $self->max_velocity;
-        }
-
-        $d += $v * $dt;
-
-        my $set_d = $dim;
-        my $set_v = 'velocity_' . $dim;
-        $self->$set_d($d);
-        $self->$set_v($v);
     }
 
-    my $paths = $self->maze->paths( $cell_x, $cell_y );
-    my $borders = $self->maze->cell_borders( $cell_x, $cell_y );
-
-    my %limits = (
-        x => {
-            -1 => [ $paths->{west}, $borders->{min_x} ],
-            1  => [ $paths->{east}, $borders->{max_x} - $self->width ],
-        },
-        y => {
-            -1 => [ $paths->{north}, $borders->{min_y} ],
-            1  => [ $paths->{south}, $borders->{max_y} - $self->width ],
+    my $rect = hash2rect(
+        {   x  => $d{x},
+            y  => $d{y},
+            xv => $v{x},
+            yv => $v{y},
+            w  => $self->width,
+            h  => $self->height,
         }
     );
 
-    my %old_d = %d;
+    my $cell_x = floor( $self->x / $self->maze->cell_width ) + 1;
+    my $cell_y = floor( $self->y / $self->maze->cell_height ) + 1;
 
-    %d = ( x => $self->x,          y => $self->y );
-    %v = ( x => $self->velocity_x, y => $self->velocity_y );
+    my @collisions;
 
-    foreach my $dims ( [qw( x y )], [qw( y x )] ) {
-        my ( $dim, $odim ) = @$dims;
-
-        my ( $d, $v, $l ) = map { $_->{$dim} } \( %d, %v, %limits );
-        my ( $od, $ov, $ol ) = map { $_->{$odim} } \( %d, %v, %limits );
-
-        next unless $ov == 0 && $v != 0;
-
-        my $od_min = $ol->{-1}->[1];
-        my $od_max = $ol->{1}->[1];
-
-        my $dir = $v <=> 0;
-
-        my ( $path, $limit ) = @{ $l->{$dir} };
-
-        if ( ( $d <=> $limit ) == $dir ) {
-            if ( !$path ) {
-                $d = $limit;
-                $v = 0;
-            }
-            elsif ( $od > $od_max || $od < $od_min ) {
-                $d = $limit;
-                $v = 0;
-            }
-        }
-
-        my $set_d = $dim;
-        my $set_v = 'velocity_' . $dim;
-        $self->$set_d($d);
-        $self->$set_v($v);
+    foreach my $wall ( @{ $self->maze->cell_walls( $cell_x, $cell_y ) } ) {
+        my $c = dynamic_collision(
+            $rect,
+            hash2rect($wall),
+            interval   => $dt,
+            keep_order => 1,
+        );
+        push @collisions, [ $wall, $c ] if $c;
     }
 
-    if ( $v{x} != 0 && $v{y} != 0 ) {
-        my $xdir = $v{x} <=> 0;
-        my $ydir = $v{y} <=> 0;
+    if (@collisions) {
+        my ($c) = sort { $a->[1]->time <=> $b->[1]->time } @collisions;
 
-        my $xmin = $limits{x}->{-1}->[1];
-        my $xmax = $limits{x}->{1}->[1];
-        my $ymin = $limits{y}->{-1}->[1];
-        my $ymax = $limits{y}->{1}->[1];
+        my ( $wall, $collision ) = @$c;
 
-        my $xpath = $limits{x}->{$xdir}->[0];
-        my $ypath = $limits{y}->{$ydir}->[0];
-        my $xlim  = $limits{x}->{$xdir}->[1];
-        my $ylim  = $limits{y}->{$ydir}->[1];
-
-        if ( ($d{x} <=> $xlim) == $xdir && ($d{y} <=> $ylim) == $ydir ) {
-            my $m = ($old_d{y} - $d{y}) / ($old_d{x} - $d{x});
-        
-
+        if ( $collision->axis eq 'x' ) {
+            $d{x}
+                = ( $v{x} <=> 0 ) == 1
+                ? $wall->{x} - $self->width - 1
+                : $wall->{x} + 2;
+            $v{x} = 0;
         }
-        elsif ( ($d{x} <=> $xlim) == $xdir ) {
-            if ( !$xpath ) {
-                $d{x} = $xlim;
-                $v{x} = 0;
-            }
-            elsif ( $d{y} > $ymax || $d{y} < $ymin) {
-                $d{x} = $xlim;
-                $v{x} = 0;
-            }
+        else {
+            $d{y}
+                = ( $v{y} <=> 0 ) == 1
+                ? $wall->{y} - $self->height - 1
+                : $wall->{y} + 2;
+            $v{y} = 0;
         }
-        elsif ( ($d{y} <=> $ylim) == $ydir ) {
-            if ( !$ypath ) {
-                $d{y} = $ylim;
-                $v{y} = 0;
-            }
-            elsif ( $d{x} > $xmax || $d{x} < $xmin) {
-                $d{y} = $ylim;
-                $v{y} = 0;
-            }
-        }
-
-        $self->x($d{x});
-        $self->y($d{y});
-        $self->velocity_x($v{x});
-        $self->velocity_y($v{y});
     }
+    else {
+        foreach my $dim (qw( x y )) {
+            $d{$dim} += $dt * $v{$dim};
+        }
+    }
+
+    $self->x( $d{x} );
+    $self->y( $d{y} );
+    $self->velocity_x( $v{x} );
+    $self->velocity_y( $v{y} );
 
     if ( $self->velocity_x == 0 && $self->velocity_y == 0 ) {
         $self->notify_observers( { type => 'stopped' } );

@@ -161,18 +161,71 @@ sub paths {
     };
 }
 
-sub cell_borders {
+sub cell_walls {
     my ( $self, $x, $y ) = @_;
 
-    my $min_x = ( $x - 1 ) * $self->cell_width;
-    my $min_y = ( $y - 1 ) * $self->cell_height;
+    my $paths = $self->paths( $x, $y );
 
-    return {
-        min_x => $min_x + 1,
-        min_y => $min_y + 1,
-        max_x => $min_x + $self->cell_height,
-        max_y => $min_y + $self->cell_width,
-    };
+    my $min_x     = ( $x - 1 ) * $self->cell_width;
+    my $min_y     = ( $y - 1 ) * $self->cell_height;
+    my $max_x     = $min_x + $self->cell_height,
+        my $max_y = $min_y + $self->cell_width,
+
+        my @walls;
+
+    if ( !$paths->{north} ) {
+        push @walls,
+            {
+            x => $min_x,
+            y => $min_y,
+            w => $self->cell_width,
+            h => 1,
+            };
+    }
+
+    if ( !$paths->{south} ) {
+        push @walls,
+            {
+            x => $min_x,
+            y => $max_y,
+            w => $self->cell_width,
+            h => 1,
+            };
+    }
+
+    if ( !$paths->{west} ) {
+        push @walls,
+            {
+            x => $min_x,
+            y => $min_y,
+            w => 1,
+            h => $self->cell_height,
+            };
+    }
+
+    if ( !$paths->{east} ) {
+        push @walls,
+            {
+            x => $max_x,
+            y => $min_y,
+            w => 1,
+            h => $self->cell_height,
+            };
+    }
+
+    foreach my $x ( $min_x, $max_x ) {
+        foreach my $y ( $min_y, $max_y ) {
+            push @walls,
+                {
+                x => $x,
+                y => $y,
+                w => 1,
+                h => 1,
+                };
+        }
+    }
+
+    return \@walls;
 }
 
 no Moose;
