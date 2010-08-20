@@ -14,14 +14,14 @@ use Path::Class;
 sub run {
     my ( $self, %options ) = @_;
 
-    my $width         = 640;
-    my $height        = 480;
-    my $cell_width    = 40;
-    my $cell_height   = 40;
-    my $player_width  = 24;
-    my $player_height = 24;
     my $cells_x       = 16;
     my $cells_y       = 12;
+    my $cell_width    = 40;
+    my $cell_height   = 40;
+    my $width         = $cell_width * $cells_x;
+    my $height        = $cell_height * $cells_y;
+    my $player_width  = 24;
+    my $player_height = 24;
     my $dt            = 25;
 
     my $maze_model = Games::Maze::SDL::Model::Maze->new(
