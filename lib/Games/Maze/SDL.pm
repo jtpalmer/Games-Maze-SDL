@@ -20,7 +20,7 @@ sub run {
     my $cell_height   = 40;
     my $player_width  = 24;
     my $player_height = 24;
-    my $cells_x       = 15;
+    my $cells_x       = 16;
     my $cells_y       = 12;
     my $dt            = 25;
 
