@@ -41,7 +41,7 @@ has 'player_old_rect' => (
 
 has 'background_color' => (
     is      => 'ro',
-    default => sub { [ 0, 0, 0, 255 ] },
+    default => 0x000000,
 );
 
 has 'wall_color' => (
