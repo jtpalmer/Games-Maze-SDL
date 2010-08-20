@@ -141,17 +141,6 @@ sub move {
     my %v = ( x => $self->velocity_x,     y => $self->velocity_y );
     my %a = ( x => $self->acceleration_x, y => $self->acceleration_y );
 
-    foreach my $dim (qw( x y )) {
-        if ( $a{$dim} == 0 ) {
-            $v{$dim} *= 0.9;
-        }
-        else {
-            if ( ( $v{$dim} += $dt * $a{$dim} ) > $self->max_velocity ) {
-                $v{$dim} = $self->max_velocity;
-            }
-        }
-    }
-
     my $rect = hash2rect(
         {   x  => $d{x},
             y  => $d{y},
@@ -161,6 +150,18 @@ sub move {
             h  => $self->height,
         }
     );
+
+    foreach my $dim (qw( x y )) {
+        if ( $a{$dim} == 0 ) {
+            $v{$dim} *= 0.9;
+        }
+        else {
+            if ( ( $v{$dim} += $dt * $a{$dim} ) > $self->max_velocity ) {
+                $v{$dim} = $self->max_velocity;
+            }
+        }
+        $d{$dim} += $dt * $v{$dim};
+    }
 
     my $cell_x = floor( $self->x / $self->maze->cell_width ) + 1;
     my $cell_y = floor( $self->y / $self->maze->cell_height ) + 1;
@@ -195,11 +196,6 @@ sub move {
                 ? $wall->{y} - $self->height - 1
                 : $wall->{y} + 2;
             $v{y} = 0;
-        }
-    }
-    else {
-        foreach my $dim (qw( x y )) {
-            $d{$dim} += $dt * $v{$dim};
         }
     }
 
