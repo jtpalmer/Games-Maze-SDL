@@ -115,11 +115,8 @@ sub draw_cells {
     }
 }
 
-sub draw_maze {
+sub draw_exit {
     my ( $self, $display ) = @_;
-
-    $self->draw_cells( $display, 1, 1, $self->model->cells_x,
-        $self->model->cells_y );
 
     $display->draw_rect(
         [   $self->model->translate_x( $self->model->exit_x - 0.1 ),
@@ -131,12 +128,25 @@ sub draw_maze {
     );
 }
 
+sub draw_maze {
+    my ( $self, $display ) = @_;
+
+    $self->draw_cells( $display, 1, 1, $self->model->cells_x,
+        $self->model->cells_y );
+
+    $self->draw_exit($display);
+}
+
 sub draw {
     my ( $self, $ticks ) = @_;
 
     $self->display->draw_rect( $self->player_old_rect,
         $self->background_color );
+
+    $self->draw_exit( $self->display );
+
     $self->player->draw( $self->display );
+
     $self->player_old_rect->x( $self->player->rect->x );
     $self->player_old_rect->y( $self->player->rect->y );
 
