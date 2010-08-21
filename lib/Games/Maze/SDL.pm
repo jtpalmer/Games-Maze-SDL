@@ -3,6 +3,7 @@ package Games::Maze::SDL;
 # ABSTRACT: Maze game; using SDL!
 
 use Moose;
+use MooseX::ClassAttribute;
 use Games::Maze::SDL::Model::Maze;
 use Games::Maze::SDL::Model::Player;
 use Games::Maze::SDL::View::Maze;
@@ -10,6 +11,24 @@ use Games::Maze::SDL::View::Player;
 use Games::Maze::SDL::Controller;
 use FindBin;
 use Path::Class;
+use File::ShareDir;
+
+class_has 'share_dir' => (
+    is         => 'ro',
+    lazy_build => 1,
+    init_arg   => undef,
+);
+
+sub _build_share_dir {
+    my $root = Path::Class::Dir->new( $FindBin::Bin, '..' );
+    if ( -f $root->file('dist.ini') ) {
+        return $root->subdir('share');
+    }
+    else {
+        return Path::Class::Dir->new(
+            File::ShareDir::dist_dir('Games-Maze-SDL') );
+    }
+}
 
 sub run {
     my ( $self, %options ) = @_;
@@ -62,13 +81,6 @@ sub run {
     $controller->run;
 }
 
-sub sharedir {
-
-    # TODO
-    my $root = Path::Class::Dir->new( $FindBin::Bin, '..' );
-    return $root->subdir('share');
-}
-
 no Moose;
 __PACKAGE__->meta->make_immutable;
 
@@ -80,7 +92,7 @@ __END__
 
     use Games::Maze::SDL;
 
-    Games::Maze::SDL->run( %options );
+    Games::Maze::SDL->new->run( %options );
 
 =head1 SEE ALSO
 

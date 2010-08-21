@@ -34,7 +34,7 @@ sub _build_sprite {
     my ($self) = @_;
 
     my $sprite = SDLx::Sprite::Animated->new(
-        image           => Games::Maze::SDL->sharedir->file('hero.png'),
+        image           => Games::Maze::SDL->share_dir->file('hero.png'),
         rect            => SDL::Rect->new( 0, 0, 24, 24 ),
         ticks_per_frame => 10,
         type            => 'reverse',
