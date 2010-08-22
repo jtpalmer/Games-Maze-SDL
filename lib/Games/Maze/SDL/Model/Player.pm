@@ -156,10 +156,13 @@ sub move {
             $v{$dim} *= 0.9;
         }
         else {
-            if ( ( $v{$dim} += $dt * $a{$dim} ) > $self->max_velocity ) {
+            $v{$dim} += $dt * $a{$dim};
+
+            if ( $v{$dim} > $self->max_velocity ) {
                 $v{$dim} = $self->max_velocity;
             }
         }
+
         $d{$dim} += $dt * $v{$dim};
     }
 
