@@ -163,6 +163,10 @@ sub move {
             }
         }
 
+        if (abs($v{$dim}) < 1.0e-3) {
+            $v{$dim} = 0;
+        }
+
         $d{$dim} += $dt * $v{$dim};
     }
 
