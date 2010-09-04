@@ -135,7 +135,7 @@ sub velocity {
 }
 
 sub move {
-    my ( $self, undef, $dt ) = @_;
+    my ( $self, $dt ) = @_;
 
     my %d = ( x => $self->x,              y => $self->y );
     my %v = ( x => $self->velocity_x,     y => $self->velocity_y );
