@@ -211,7 +211,7 @@ sub move {
     $self->velocity_x( $v{x} );
     $self->velocity_y( $v{y} );
 
-    if ( $self->velocity_x == 0 && $self->velocity_y == 0 ) {
+    if ( $v{x} == 0 && $v{y} == 0 && $a{x} == 0 && $a{y} == 0 ) {
         $self->notify_observers( { type => 'stopped' } );
     }
     else {
