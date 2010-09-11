@@ -64,7 +64,7 @@ has 'velocity_y' => (
 has 'max_velocity' => (
     is      => 'ro',
     isa     => 'Num',
-    default => 0.1,
+    default => 100,
 );
 
 has 'acceleration_y' => (
@@ -106,18 +106,18 @@ after 'direction' => sub {
         my $d = shift;
         if ( $d eq 'north' ) {
             $self->acceleration_x(0);
-            $self->acceleration_y(-0.0001);
+            $self->acceleration_y(-100);
         }
         if ( $d eq 'south' ) {
             $self->acceleration_x(0);
-            $self->acceleration_y(0.0001);
+            $self->acceleration_y(100);
         }
         if ( $d eq 'west' ) {
-            $self->acceleration_x(-0.0001);
+            $self->acceleration_x(-100);
             $self->acceleration_y(0);
         }
         if ( $d eq 'east' ) {
-            $self->acceleration_x(0.0001);
+            $self->acceleration_x(100);
             $self->acceleration_y(0);
         }
 
@@ -163,7 +163,7 @@ sub move {
             }
         }
 
-        if (abs($v{$dim}) < 1.0e-3) {
+        if ( abs( $v{$dim} ) < 1.0 ) {
             $v{$dim} = 0;
         }
 

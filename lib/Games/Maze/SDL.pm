@@ -41,7 +41,7 @@ sub run {
     my $height        = $cell_height * $cells_y;
     my $player_width  = 24;
     my $player_height = 24;
-    my $dt            = 25;
+    my $dt            = 0.025;
 
     my $maze_model = Games::Maze::SDL::Model::Maze->new(
         cells_x     => $cells_x,
