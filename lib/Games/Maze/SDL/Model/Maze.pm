@@ -166,12 +166,12 @@ sub cell_walls {
 
     my $paths = $self->paths( $x, $y );
 
-    my $min_x     = ( $x - 1 ) * $self->cell_width;
-    my $min_y     = ( $y - 1 ) * $self->cell_height;
-    my $max_x     = $min_x + $self->cell_height,
-        my $max_y = $min_y + $self->cell_width,
+    my $min_x = ( $x - 1 ) * $self->cell_width;
+    my $min_y = ( $y - 1 ) * $self->cell_height;
+    my $max_x = $min_x + $self->cell_height;
+    my $max_y = $min_y + $self->cell_width;
 
-        my @walls;
+    my @walls;
 
     if ( !$paths->{north} ) {
         push @walls,
