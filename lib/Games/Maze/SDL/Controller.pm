@@ -34,8 +34,8 @@ sub BUILD {
 sub on_event {
     my ( $self, $e ) = @_;
 
-    return 0 if $e->type == SDL_QUIT;
-    return 0 if $e->key_sym == SDLK_ESCAPE;
+    $self->stop if $e->type == SDL_QUIT;
+    $self->stop if $e->key_sym == SDLK_ESCAPE;
 
     my $player = $self->model->{player};
 
