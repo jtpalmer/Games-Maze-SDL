@@ -70,7 +70,7 @@ sub handle_event {
         $self->sprite->y( $self->model->y );
 
         my $v = $self->model->velocity;
-        $self->sprite->ticks_per_frame( floor( 5 / $v ) + 5 )
+        $self->sprite->ticks_per_frame( floor( 1 / $v ) + 5 )
             unless $v == 0;
     }
     elsif ( $event->{type} eq 'turned' ) {

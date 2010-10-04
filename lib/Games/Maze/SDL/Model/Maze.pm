@@ -4,6 +4,7 @@ package Games::Maze::SDL::Model::Maze;
 
 use Moose;
 use Games::Maze;
+use Games::Maze::SDL::Model::Wall;
 use Games::Maze::SDL::Role::Observable;
 use POSIX 'floor';
 
@@ -225,7 +226,7 @@ sub cell_walls {
         }
     }
 
-    return \@walls;
+    return [ map { Games::Maze::SDL::Model::Wall->new(%$_) } @walls ];
 }
 
 no Moose;
