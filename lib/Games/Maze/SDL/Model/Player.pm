@@ -8,7 +8,6 @@ use Games::Maze::SDL::Role::Observable;
 use Games::Maze::SDL::Model::Maze;
 use Collision::Util ':interval';
 use POSIX 'floor';
-use Data::Dumper;
 
 with 'Games::Maze::SDL::Role::Observable';
 
@@ -192,8 +191,6 @@ sub move {
 
     foreach my $c (@collisions) {
         my ( $wall, $axis ) = @$c;
-
-        print Dumper( $axis, $wall ) if $axis->[0] || $axis->[1];
 
         if ( $axis->[0] ) {
             $d{x} = $wall->x - $self->width - 1 if $axis->[0] == -1;
