@@ -176,12 +176,12 @@ sub move {
         if ( abs( $v{$dim} ) < 0.01 ) {
             $v{$dim} = 0;
         }
-
-        $d{$dim} += $dt * $v{$dim};
     }
+    $self->velocity_x( $v{x} );
+    $self->velocity_y( $v{y} );
 
-    my $cell_x = floor( ( $self->x + $self->width / 2 ) / $self->maze->cell_width ) + 1;
-    my $cell_y = floor( ( $self->y + $self->height / 2 ) / $self->maze->cell_height ) + 1; 
+    my $cell_x = floor( $self->x / $self->maze->cell_width ) + 1;
+    my $cell_y = floor( $self->y / $self->maze->cell_height ) + 1;
     my @collisions;
 
     foreach my $wall ( @{ $self->maze->cell_walls( $cell_x, $cell_y ) } ) {
@@ -189,19 +189,26 @@ sub move {
         push @collisions, [ $wall, $c ] if $c;
     }
 
+    my %c;
     foreach my $c (@collisions) {
         my ( $wall, $axis ) = @$c;
 
         if ( $axis->[0] ) {
+            $c{x} = 1;
             $d{x} = $wall->x - $self->width - 1 if $axis->[0] == -1;
             $d{x} = $wall->x + 2                if $axis->[0] == 1;
             $v{x} = 0;
         }
         if ( $axis->[1] ) {
+            $c{y} = 1;
             $d{y} = $wall->y - $self->height - 1 if $axis->[1] == 1;
             $d{y} = $wall->y + 2                 if $axis->[1] == -1;
             $v{y} = 0;
         }
+    }
+
+    foreach my $dim (qw( x y )) {
+        $d{$dim} += $dt * $v{$dim} unless defined $c{$dim};
     }
 
     $self->x( $d{x} );
