@@ -169,8 +169,8 @@ sub cell_walls {
 
     my $min_x = ( $x - 1 ) * $self->cell_width;
     my $min_y = ( $y - 1 ) * $self->cell_height;
-    my $max_x = $min_x + $self->cell_height;
-    my $max_y = $min_y + $self->cell_width;
+    my $max_x = $min_x + $self->cell_width;
+    my $max_y = $min_y + $self->cell_height;
 
     my @walls;
 
