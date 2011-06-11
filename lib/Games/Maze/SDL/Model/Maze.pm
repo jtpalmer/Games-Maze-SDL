@@ -4,7 +4,6 @@ package Games::Maze::SDL::Model::Maze;
 
 use Moose;
 use Games::Maze;
-use Games::Maze::SDL::Model::Wall;
 use Games::Maze::SDL::Role::Observable;
 use POSIX 'floor';
 
@@ -31,6 +30,12 @@ has 'cell_width' => (
 has 'cell_height' => (
     is       => 'ro',
     isa      => 'Int',
+    required => 1,
+);
+
+has 'box2d' => (
+    is       => 'ro',
+    isa      => 'Games::Maze::SDL::Model::Box2D',
     required => 1,
 );
 
@@ -82,6 +87,14 @@ sub BUILD {
         &= ~$Games::Maze::North;
     $self->cells->[ $self->exit_y - 1 ][ $self->exit_x - 1 ]
         &= ~$Games::Maze::South;
+
+    foreach my $x ( 1 .. $self->cells_x ) {
+        foreach my $y ( 1 .. $self->cells_y ) {
+            foreach my $wall ( @{ $self->cell_walls( $x, $y ) } ) {
+                $self->box2d->create_static($wall);
+            }
+        }
+    }
 }
 
 sub _build_maze {
@@ -226,7 +239,7 @@ sub cell_walls {
         }
     }
 
-    return [ map { Games::Maze::SDL::Model::Wall->new(%$_) } @walls ];
+    return \@walls;
 }
 
 no Moose;

@@ -4,6 +4,7 @@ package Games::Maze::SDL;
 
 use Moose;
 use MooseX::ClassAttribute;
+use Games::Maze::SDL::Model::Box2D;
 use Games::Maze::SDL::Model::Maze;
 use Games::Maze::SDL::Model::Player;
 use Games::Maze::SDL::View::Maze;
@@ -43,7 +44,10 @@ sub run {
     my $player_height = 24;
     my $dt            = 0.0025;
 
+    my $box2d_model = Games::Maze::SDL::Model::Box2D->new();
+
     my $maze_model = Games::Maze::SDL::Model::Maze->new(
+        box2d       => $box2d_model,
         cells_x     => $cells_x,
         cells_y     => $cells_y,
         cell_width  => $cell_width,
@@ -51,6 +55,7 @@ sub run {
     );
 
     my $player_model = Games::Maze::SDL::Model::Player->new(
+        box2d  => $box2d_model,
         maze   => $maze_model,
         width  => $player_width,
         height => $player_height,
@@ -69,6 +74,7 @@ sub run {
     my $controller = Games::Maze::SDL::Controller->new(
         dt    => $dt,
         model => {
+            box2d  => $box2d_model,
             maze   => $maze_model,
             player => $player_model,
         },
@@ -82,6 +88,7 @@ sub run {
 }
 
 no Moose;
+
 __PACKAGE__->meta->make_immutable;
 
 1;

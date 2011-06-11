@@ -6,7 +6,6 @@ use Moose;
 use Games::Maze::SDL::Types;
 use Games::Maze::SDL::Role::Observable;
 use Games::Maze::SDL::Model::Maze;
-use Collision::Util ':interval';
 use POSIX 'floor';
 
 with 'Games::Maze::SDL::Role::Observable';
@@ -18,15 +17,29 @@ has 'maze' => (
 );
 
 has 'width' => (
-    is       => 'rw',
+    is       => 'ro',
     isa      => 'Int',
     required => 1,
 );
 
 has 'height' => (
-    is       => 'rw',
+    is       => 'ro',
     isa      => 'Int',
     required => 1,
+);
+
+has 'box2d' => (
+    is       => 'ro',
+    isa      => 'Games::Maze::SDL::Model::Box2D',
+    required => 1,
+);
+
+has 'body' => (
+    is       => 'rw',
+    isa      => 'Box2D::b2Body',
+    builder  => '_build_body',
+    lazy     => 1,
+    init_arg => undef,
 );
 
 has 'direction' => (
@@ -35,30 +48,10 @@ has 'direction' => (
     default => 'south',
 );
 
-has 'x' => (
-    is         => 'rw',
-    isa        => 'Num',
-    lazy_build => 1,
-    init_arg   => undef,
-);
-
-has 'y' => (
-    is         => 'rw',
-    isa        => 'Num',
-    lazy_build => 1,
-    init_arg   => undef,
-);
-
-has 'velocity_x' => (
-    is      => 'rw',
-    isa     => 'Num',
-    default => 0,
-);
-
-has 'velocity_y' => (
-    is      => 'rw',
-    isa     => 'Num',
-    default => 0,
+has 'force' => (
+    is => 'rw',
+    isa => 'Box2D::b2Vec2',
+    default => sub { Box2D::b2Vec2->new(0.0, 0.0) },
 );
 
 has 'max_velocity' => (
@@ -67,38 +60,39 @@ has 'max_velocity' => (
     default => 0.25,
 );
 
-has 'acceleration_y' => (
-    is      => 'rw',
-    isa     => 'Num',
-    default => 0,
-);
-
-has 'acceleration_x' => (
-    is      => 'rw',
-    isa     => 'Num',
-    default => 0,
-);
-
-sub _build_x {
+sub _build_body {
     my ($self) = @_;
-    return $self->maze->translate_x( $self->maze->entry_x )
-        - $self->width / 2;
+
+    my $x = $self->maze->translate_x( $self->maze->entry_x ) - $self->w / 2;
+    my $y = $self->maze->translate_y( $self->maze->entry_y ) - $self->h / 2;
+
+    return $self->box2d->create_dynamic(
+        {   x => $x,
+            y => $y,
+            w => $self->w,
+            h => $self->h,
+        }
+    );
 }
 
-sub _build_y {
+sub x {
     my ($self) = @_;
-    return $self->maze->translate_y( $self->maze->entry_y )
-        - $self->height / 2;
+    return $self->body->GetPosition->x - $self->w / 2;
+}
+
+sub y {
+    my ($self) = @_;
+    return $self->body->GetPosition->y - $self->h / 2;
 }
 
 sub v_x {
     my ($self) = @_;
-    return $self->velocity_x;
+    return $self->body->GetLinearVelocity->x;
 }
 
 sub v_y {
     my ($self) = @_;
-    return $self->velocity_y;
+    return $self->body->GetLinearVelocity->y;
 }
 
 sub w {
@@ -111,7 +105,7 @@ sub h {
     return $self->height;
 }
 
-after qw( x y direction velocity_x velocity_y ) => sub {
+after 'direction' => sub {
     my $self = shift;
 
     if (@_) {
@@ -125,109 +119,44 @@ after 'direction' => sub {
     if (@_) {
         my $d = shift;
         if ( $d eq 'north' ) {
-            $self->acceleration_x(0);
-            $self->acceleration_y(-0.1);
+            $self->_apply_force( 0.0, -1.0 );
         }
         if ( $d eq 'south' ) {
-            $self->acceleration_x(0);
-            $self->acceleration_y(0.1);
+            $self->_apply_force( 0.0, 1.0 );
         }
         if ( $d eq 'west' ) {
-            $self->acceleration_x(-0.1);
-            $self->acceleration_y(0);
+            $self->_apply_force( -1.0, 0.0 );
         }
         if ( $d eq 'east' ) {
-            $self->acceleration_x(0.1);
-            $self->acceleration_y(0);
+            $self->_apply_force( 1.0, 0.0 );
         }
 
         $self->notify_observers( { type => 'turned' } );
     }
 };
 
+sub _apply_force {
+    my ( $self, $x, $y ) = @_;
+    $self->force( Box2D::b2Vec2->new( $x * 10, $y * 10 ) )
+}
+
+sub apply_force {
+    my ( $self ) = @_;
+    $self->body->ApplyLinearImpulse($self->force, $self->body->GetWorldCenter );
+}
+
 sub velocity {
     my ($self) = @_;
 
-    my $vx = $self->velocity_x;
-    my $vy = $self->velocity_y;
+    my $vx = $self->v_x;
+    my $vy = $self->v_y;
 
     return sqrt( $vx * $vx + $vy * $vy );
 }
 
-sub move {
-    my ( $self, $dt ) = @_;
-
-    my %d = ( x => $self->x,              y => $self->y );
-    my %v = ( x => $self->velocity_x,     y => $self->velocity_y );
-    my %a = ( x => $self->acceleration_x, y => $self->acceleration_y );
-
-    foreach my $dim (qw( x y )) {
-        if ( $a{$dim} == 0 ) {
-            $v{$dim} *= 0.99;
-        }
-        else {
-            $v{$dim} += $dt * $a{$dim};
-
-            if ( abs( $v{$dim} ) > $self->max_velocity ) {
-                $v{$dim} = ( $v{$dim} <=> 0 ) * $self->max_velocity;
-            }
-        }
-
-        if ( abs( $v{$dim} ) < 0.01 ) {
-            $v{$dim} = 0;
-        }
-    }
-    $self->velocity_x( $v{x} );
-    $self->velocity_y( $v{y} );
-
-    my $cell_x = floor( $self->x / $self->maze->cell_width ) + 1;
-    my $cell_y = floor( $self->y / $self->maze->cell_height ) + 1;
-    my @collisions;
-
-    foreach my $wall ( @{ $self->maze->cell_walls( $cell_x, $cell_y ) } ) {
-        my $c = $self->check_collision_interval( $wall, 1 );
-        push @collisions, [ $wall, $c ] if $c;
-    }
-
-    my %c;
-    foreach my $c (@collisions) {
-        my ( $wall, $axis ) = @$c;
-
-        if ( $axis->[0] ) {
-            $c{x} = 1;
-            $d{x} = $wall->x - $self->width - 1 if $axis->[0] == -1;
-            $d{x} = $wall->x + 2 if $axis->[0] == 1;
-            $v{x} = 0;
-        }
-        if ( $axis->[1] ) {
-            $c{y} = 1;
-            $d{y} = $wall->y - $self->height - 1 if $axis->[1] == 1;
-            $d{y} = $wall->y + 2 if $axis->[1] == -1;
-            $v{y} = 0;
-        }
-    }
-
-    foreach my $dim (qw( x y )) {
-        $d{$dim} += $dt * $v{$dim} unless defined $c{$dim};
-    }
-
-    $self->x( $d{x} );
-    $self->y( $d{y} );
-    $self->velocity_x( $v{x} );
-    $self->velocity_y( $v{y} );
-
-    if ( $v{x} == 0 && $v{y} == 0 && $a{x} == 0 && $a{y} == 0 ) {
-        $self->notify_observers( { type => 'stopped' } );
-    }
-    else {
-        $self->notify_observers( { type => 'moved' } );
-    }
-}
-
 sub stop {
     my ($self) = @_;
-    $self->acceleration_x(0);
-    $self->acceleration_y(0);
+    $self->_apply_force( 0.0, 0.0 );
 }
 
 no Moose;

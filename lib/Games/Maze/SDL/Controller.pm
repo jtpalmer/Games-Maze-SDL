@@ -25,7 +25,12 @@ sub BUILD {
     my ($self) = @_;
 
     $self->add_event_handler( sub { $self->on_event(@_) } );
-    $self->add_move_handler( sub  { $self->model->{player}->move(@_) } );
+
+    $self->add_move_handler( sub  {
+            $self->model->{player}->apply_force;
+            $self->model->{box2d}->step(@_);
+        } );
+
     $self->add_show_handler( sub  { $self->view->{maze}->draw(@_) } );
 
     return $self;

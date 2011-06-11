@@ -47,7 +47,7 @@ sub _build_sprite {
         },
     );
 
-    $sprite->alpha_key( [ 255, 0, 0 ] );
+    #$sprite->alpha_key( [ 255, 0, 0 ] );
     $sprite->sequence( $self->model->direction );
 
     $sprite->x( $self->model->x );
@@ -58,7 +58,8 @@ sub _build_sprite {
 
 sub draw {
     my ( $self, $display ) = @_;
-
+    $self->sprite->x( $self->model->x );
+    $self->sprite->y( $self->model->y );
     $self->sprite->draw($display);
 }
 
