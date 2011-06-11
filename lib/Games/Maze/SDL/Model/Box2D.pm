@@ -67,6 +67,8 @@ sub create_static {
     my $shape = Box2D::b2PolygonShape->new();
     $shape->SetAsBox( $hx, $hy );
     $body->CreateFixture( $shape, 0.0 );
+
+    return $body;
 }
 
 sub create_dynamic {
