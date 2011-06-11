@@ -196,13 +196,13 @@ sub move {
         if ( $axis->[0] ) {
             $c{x} = 1;
             $d{x} = $wall->x - $self->width - 1 if $axis->[0] == -1;
-            $d{x} = $wall->x + 2                if $axis->[0] == 1;
+            $d{x} = $wall->x + 2 if $axis->[0] == 1;
             $v{x} = 0;
         }
         if ( $axis->[1] ) {
             $c{y} = 1;
             $d{y} = $wall->y - $self->height - 1 if $axis->[1] == 1;
-            $d{y} = $wall->y + 2                 if $axis->[1] == -1;
+            $d{y} = $wall->y + 2 if $axis->[1] == -1;
             $v{y} = 0;
         }
     }
