@@ -119,25 +119,25 @@ after 'direction' => sub {
     if (@_) {
         my $d = shift;
         if ( $d eq 'north' ) {
-            $self->_apply_force( 0.0, -1.0 );
+            $self->set_force( 0.0, -1.0 );
         }
         if ( $d eq 'south' ) {
-            $self->_apply_force( 0.0, 1.0 );
+            $self->set_force( 0.0, 1.0 );
         }
         if ( $d eq 'west' ) {
-            $self->_apply_force( -1.0, 0.0 );
+            $self->set_force( -1.0, 0.0 );
         }
         if ( $d eq 'east' ) {
-            $self->_apply_force( 1.0, 0.0 );
+            $self->set_force( 1.0, 0.0 );
         }
 
         $self->notify_observers( { type => 'turned' } );
     }
 };
 
-sub _apply_force {
+sub set_force {
     my ( $self, $x, $y ) = @_;
-    $self->force( Box2D::b2Vec2->new( $x * 10, $y * 10 ) )
+    $self->force( Box2D::b2Vec2->new( $x * 10, $y * 10 ) );
 }
 
 sub apply_force {
@@ -156,7 +156,7 @@ sub velocity {
 
 sub stop {
     my ($self) = @_;
-    $self->_apply_force( 0.0, 0.0 );
+    $self->set_force( 0.0, 0.0 );
 }
 
 no Moose;
