@@ -57,8 +57,6 @@ sub step {
 sub create_static {
     my ( $self, $static ) = @_;
 
-    warn "create_static: ", join(', ', @$static{qw{ x y w h }});
-
     my $hx = $static->{w} / 2.0;
     my $hy = $static->{h} / 2.0;
 
@@ -73,8 +71,6 @@ sub create_static {
 
 sub create_dynamic {
     my ( $self, $dynamic ) = @_;
-
-    warn "create_dynamic: ", join(', ', @$dynamic{qw{ x y w h }});
 
     my $hx = $dynamic->{w} / 2.0;
     my $hy = $dynamic->{h} / 2.0;
