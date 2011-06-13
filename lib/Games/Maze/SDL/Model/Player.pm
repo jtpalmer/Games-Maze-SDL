@@ -49,9 +49,9 @@ has 'direction' => (
 );
 
 has 'force' => (
-    is => 'rw',
-    isa => 'Box2D::b2Vec2',
-    default => sub { Box2D::b2Vec2->new(0.0, 0.0) },
+    is      => 'rw',
+    isa     => 'Box2D::b2Vec2',
+    default => sub { Box2D::b2Vec2->new( 0.0, 0.0 ) },
 );
 
 has 'max_velocity' => (
