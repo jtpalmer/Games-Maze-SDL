@@ -141,8 +141,12 @@ sub set_force {
 }
 
 sub apply_force {
-    my ( $self ) = @_;
-    $self->body->ApplyLinearImpulse($self->force, $self->body->GetWorldCenter );
+    my ($self) = @_;
+
+    my $fx    = $self->force->x - $self->v_x * 1.5;
+    my $fy    = $self->force->y - $self->v_y * 1.5;
+    my $force = Box2D::b2Vec2->new( $fx, $fy );
+    $self->body->ApplyLinearImpulse( $force, $self->body->GetWorldCenter );
 }
 
 sub velocity {
