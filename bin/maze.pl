@@ -10,6 +10,7 @@ BEGIN {
 
 use Games::Maze::SDL;
 
+# PODNAME: maze.pl
 # ABSTRACT: Play the game!
 
 Games::Maze::SDL->new->run(@ARGV);
