@@ -1,8 +1,10 @@
 package Games::Maze::SDL::Role::Observable;
+use strict;
+use warnings;
+use Moose::Role;
+use namespace::clean -except => 'meta';
 
 # ABSTRACT: Observable role.
-
-use Moose::Role;
 
 has 'observers' => (
     is      => 'rw',
@@ -42,4 +44,7 @@ sub notify_observers {
 
 1;
 
-__END__
+=pod
+
+=cut
+

@@ -1,9 +1,11 @@
 package Games::Maze::SDL::Model::Box2D;
+use strict;
+use warnings;
+use Moose;
+use namespace::clean -except => 'meta';
+use Box2D;
 
 # ABSTRACT: Box2D model.
-
-use Moose;
-use Box2D;
 
 has _world => (
     is      => 'ro',
@@ -95,10 +97,11 @@ sub create_dynamic {
     return $body;
 }
 
-no Moose;
-
 __PACKAGE__->meta->make_immutable;
 
 1;
 
-__END__
+=pod
+
+=cut
+

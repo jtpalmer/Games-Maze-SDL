@@ -1,13 +1,16 @@
 package Games::Maze::SDL::Controller;
+use strict;
+use warnings;
+use MooseX::InsideOut;
+use MooseX::NonMoose::InsideOut;
+use namespace::clean -except => 'meta';
+use SDL 2.500;
+use SDL::Event;
+use SDL::Events qw(:all);
 
 # ABSTRACT: Controller.
 
-use Moose;
-use MooseX::NonMoose::InsideOut;
-use SDL::Event;
-use SDL::Events ':all';
-
-extends 'SDLx::Controller';
+extends qw(SDLx::Controller);
 
 has 'model' => (
     is       => 'ro',
@@ -62,12 +65,11 @@ sub on_event {
     return 1;
 }
 
-no Moose;
 __PACKAGE__->meta->make_immutable;
 
 1;
 
-__END__
+=pod
 
 =head1 SYNOPSIS
 
@@ -84,3 +86,6 @@ __END__
             player => $player_view,
         },
     );
+
+=cut
+

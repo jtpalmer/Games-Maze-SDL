@@ -1,8 +1,8 @@
 package Games::Maze::SDL;
-
-# ABSTRACT: Maze game; using SDL!
-
+use strict;
+use warnings;
 use Moose;
+use namespace::clean -except => 'meta';
 use MooseX::ClassAttribute;
 use Games::Maze::SDL::Model::Box2D;
 use Games::Maze::SDL::Model::Maze;
@@ -13,6 +13,8 @@ use Games::Maze::SDL::Controller;
 use FindBin;
 use Path::Class;
 use File::ShareDir;
+
+# ABSTRACT: Maze game; using SDL!
 
 class_has 'share_dir' => (
     is         => 'ro',
@@ -87,13 +89,11 @@ sub run {
     $controller->run;
 }
 
-no Moose;
-
 __PACKAGE__->meta->make_immutable;
 
 1;
 
-__END__
+=pod
 
 =head1 SYNOPSIS
 
@@ -104,3 +104,6 @@ __END__
 =head1 SEE ALSO
 
 L<SDL>, L<Games::Maze>, L<Games::Maze::SVG>
+
+=cut
+

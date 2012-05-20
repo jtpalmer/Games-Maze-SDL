@@ -1,12 +1,14 @@
 package Games::Maze::SDL::View::Player;
-
-# ABSTRACT: Player view.
-
+use strict;
+use warnings;
 use Moose;
+use namespace::clean -except => 'meta';
 use Games::Maze::SDL::Model::Player;
 use SDL::Rect;
 use SDLx::Sprite::Animated;
-use POSIX 'floor';
+use POSIX qw(floor);
+
+# ABSTRACT: Player view.
 
 has 'model' => (
     is       => 'ro',
@@ -83,12 +85,11 @@ sub handle_event {
     }
 }
 
-no Moose;
 __PACKAGE__->meta->make_immutable;
 
 1;
 
-__END__
+=pod
 
 =head1 SYNOPSIS
 
@@ -97,3 +98,6 @@ __END__
     my $view = Games::Maze::SDL::View::Player->new(
         model => $model,
     );
+
+=cut
+

@@ -1,11 +1,13 @@
 package Games::Maze::SDL::Model::Maze;
-
-# ABSTRACT: Maze model.
-
+use strict;
+use warnings;
 use Moose;
+use namespace::clean -except => 'meta';
 use Games::Maze;
 use Games::Maze::SDL::Role::Observable;
-use POSIX 'floor';
+use POSIX qw(floor);
+
+# ABSTRACT: Maze model.
 
 with 'Games::Maze::SDL::Role::Observable';
 
@@ -242,12 +244,11 @@ sub cell_walls {
     return \@walls;
 }
 
-no Moose;
 __PACKAGE__->meta->make_immutable;
 
 1;
 
-__END__
+=pod
 
 =head1 SYNOPSIS
 
@@ -259,3 +260,6 @@ __END__
         cell_width  => $cell_width,
         cell_height => $cell_height,
     );
+
+=cut
+

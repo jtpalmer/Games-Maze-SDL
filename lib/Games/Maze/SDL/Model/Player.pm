@@ -1,14 +1,16 @@
 package Games::Maze::SDL::Model::Player;
-
-# ABSTRACT: Player model.
-
+use strict;
+use warnings;
 use Moose;
+use namespace::clean -except => 'meta';
 use Games::Maze::SDL::Types;
 use Games::Maze::SDL::Role::Observable;
 use Games::Maze::SDL::Model::Maze;
-use POSIX 'floor';
+use POSIX qw(floor);
 
-with 'Games::Maze::SDL::Role::Observable';
+# ABSTRACT: Player model.
+
+with qw(Games::Maze::SDL::Role::Observable);
 
 has 'maze' => (
     is       => 'rw',
@@ -163,12 +165,11 @@ sub stop {
     $self->set_force( 0.0, 0.0 );
 }
 
-no Moose;
 __PACKAGE__->meta->make_immutable;
 
 1;
 
-__END__
+=pod
 
 =head1 SYNOPSIS
 
@@ -179,3 +180,6 @@ __END__
         height => $height,
         maze   => $maze,
     );
+
+=cut
+

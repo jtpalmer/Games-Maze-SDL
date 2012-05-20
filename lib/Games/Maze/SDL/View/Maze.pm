@@ -1,12 +1,14 @@
 package Games::Maze::SDL::View::Maze;
-
-# ABSTRACT: View.
-
+use strict;
+use warnings;
 use Moose;
+use namespace::clean -except => 'meta';
 use Games::Maze::SDL::Model::Maze;
 use Games::Maze::SDL::View::Player;
 use SDL::Rect;
-use POSIX 'floor';
+use POSIX qw(floor);
+
+# ABSTRACT: View.
 
 has 'model' => (
     is       => 'ro',
@@ -155,12 +157,11 @@ sub draw {
     return $self;
 }
 
-no Moose;
 __PACKAGE__->meta->make_immutable;
 
 1;
 
-__END__
+=pod
 
 =head1 SYNOPSIS
 
@@ -169,3 +170,6 @@ __END__
     my $view = Games::Maze::SDL::View::Maze->new(
         model => $model,
     );
+
+=cut
+

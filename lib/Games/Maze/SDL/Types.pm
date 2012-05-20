@@ -1,9 +1,15 @@
 package Games::Maze::SDL::Types;
+use strict;
+use warnings;
+use Moose::Util::TypeConstraints;
 
 # ABSTRACT: Moose types used internally.
 
-use Moose::Util::TypeConstraints;
-
 enum 'Games::Maze::SDL::Direction' => qw(north south west east);
 
-no Moose::Util::TypeConstraints;
+1;
+
+=pod
+
+=cut
+
