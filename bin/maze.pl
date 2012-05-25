@@ -15,3 +15,5 @@ use Games::Maze::SDL;
 
 Games::Maze::SDL->new->run(@ARGV);
 
+exit;
+
