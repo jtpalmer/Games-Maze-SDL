@@ -1,4 +1,8 @@
 #!perl
+
+# ABSTRACT: Play the game
+# PODNAME: maze.pl
+
 use strict;
 use warnings;
 
@@ -10,10 +14,9 @@ BEGIN {
 
 use Games::Maze::SDL;
 
-# PODNAME: maze.pl
-# ABSTRACT: Play the game!
-
 Games::Maze::SDL->new->run(@ARGV);
 
 exit;
+
+__END__
 
