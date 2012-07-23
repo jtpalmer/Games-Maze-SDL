@@ -47,7 +47,6 @@ sub _build_sprite {
         },
     );
 
-    $sprite->alpha_key( [ 255, 0, 0 ] );
     $sprite->sequence( $self->model->direction );
 
     $sprite->x( $self->model->x );
